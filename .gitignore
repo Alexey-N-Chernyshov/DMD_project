@@ -1,3 +1,9 @@
+## ignore data folder
+/data/*
+
+## ignore python *.pyc
+*.pyc
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof

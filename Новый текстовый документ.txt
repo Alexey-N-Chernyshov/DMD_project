@@ -1,0 +1,41 @@
+DB from
+https://aminer.org/billboard/citation
+
+(
+sudo apt-get install python3
+sudo apt-get install python3-pip
+)
+sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+sudo pip install summa
+
+
+Article
+- index id of this paper
+- paperTitle
+- Year
+- publication venue (possible empty)
+
+Author
+- AuthorID
+- Name
+
+(rel) Article_Author m:n
+- articleID
+- authorID
+
+//#! --- Abstract
+KeyWords
+- keywordID
+- keyword
+
+(rel) //#! --- Abstract
+Article_KeyWords
+- articleID
+- keywordID
+
+//#% ---- the id of references of this paper (there are multiple lines, with each indicating a reference)
+(rel) Reference
+-articleID (from)
+- articleID (to)
+
+
