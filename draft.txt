@@ -1,12 +1,14 @@
 DB from
 https://aminer.org/billboard/citation
 
+15gb of free space
 (
-sudo apt-get install python3
-sudo apt-get install python3-pip
+sudo apt-get install python-pip
 )
 sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
 sudo pip install summa
+pip install pattern
+pip install networkx
 
 
 Article
