@@ -53,6 +53,7 @@ if __name__ == '__main__':
     countIndexes = 0
     countArticles = 0
     countReferences = 0
+    countHasAbstract = 0
     maxAbstractLen = 0
     maxVenueLen = 0
 
@@ -93,6 +94,8 @@ if __name__ == '__main__':
                 a.setAbstract(line)
                 if len(a.abstract) > maxAbstractLen:
                     maxAbstractLen = len(a.abstract)
+                if len(line) > 3:
+                    countHasAbstract += 1
 
             if line == b'\n':
                 #print(a.tostring())
@@ -111,5 +114,6 @@ if __name__ == '__main__':
     print('Indexes proceeded: ' + str(countIndexes))
     print('Articles proceeded: ' + str(countArticles))
     print('Reference count: ' + str(countReferences))
+    print('Articles have abstract: ' + str(countHasAbstract))
     print('Max abstract length: ' + str(maxAbstractLen))
     print('Max venue length: ' + str(maxVenueLen))
