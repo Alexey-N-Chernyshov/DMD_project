@@ -1,15 +1,20 @@
 DB from
 https://aminer.org/billboard/citation
 
+//=================================================================================
+Requirements:
 15gb of free space
-(
+OS linux with installed python 2.x
 sudo apt-get install python-pip
-)
+
+Install summa for keyword extraction (https://pypi.python.org/pypi/summa/0.0.7):
 sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
-sudo pip install summa
 pip install pattern
 pip install networkx
+sudo pip install summa
 
+//=================================================================================
+ER model:
 
 Article
 - index id of this paper
