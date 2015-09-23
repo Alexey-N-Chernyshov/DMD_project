@@ -3,7 +3,6 @@ https://aminer.org/billboard/citation
 
 //=================================================================================
 TODO:
-add totalCountKeywords (non unique)
 make keywords as map with unique ids
 
 //=================================================================================
@@ -63,5 +62,3 @@ Article_KeyWords
 (rel) Reference
 -articleID (from)
 - articleID (to)
-
-
