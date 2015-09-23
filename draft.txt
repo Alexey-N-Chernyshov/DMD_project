@@ -2,6 +2,11 @@ DB from
 https://aminer.org/billboard/citation
 
 //=================================================================================
+TODO:
+add totalCountKeywords (non unique)
+make keywords as map with unique ids
+
+//=================================================================================
 Requirements:
 15gb of free space
 OS linux with installed python 2.x
