@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import time
+import sys
+from summa import keywords
 
+#-------------------------------------------------------------------------------
+filename = '../../data/data.txt'
+extractKeywords = False
+
+#-------------------------------------------------------------------------------
 class Article:
     index = 0
     name = ''
@@ -11,6 +18,7 @@ class Article:
     author = []
     references = []
     abstract = ''
+    keywordsArticle = {}
 
     def __init__(self):
         self.references = list()
@@ -34,7 +42,18 @@ class Article:
         self.references.append(int(line[2:-1].decode('cp866')))
 
     def setAbstract(self, line):
-        self.abstract = line[2:-1].decode('cp866')
+        text = line[2:-1]
+        if len(text) > 0:
+            self.abstract = text.decode('cp866')
+            if extractKeywords:
+                try:
+                    self.keywordsArticle = set(keywords.keywords(text).split('\n'))
+                    return 0
+                except Exception as e:
+                    print('Exception while extracting keywords from article id: ' +\
+                        str(self.index) + ' ' + str(e))
+                    print('Abstract: ' + self.abstract)
+                    return -1
 
     def tostring(self):
         return 'Article:' + \
@@ -47,7 +66,7 @@ class Article:
             '\n\tabstract: ' + self.abstract
 
 if __name__ == '__main__':
-    filename = '../../data/data.txt'
+    allKeywords = set()
 
     startTime = time.time()
     countIndexes = 0
@@ -56,6 +75,8 @@ if __name__ == '__main__':
     countHasAbstract = 0
     maxAbstractLen = 0
     maxVenueLen = 0
+    maxKeywordsArticle = 0
+    countAbstractExceptions = 0
 
     with open(filename, 'rb', 1) as infile:
         print('Open file ' + infile.name)
@@ -91,16 +112,22 @@ if __name__ == '__main__':
 
             # #a starts article abstract
             if line.startswith(b'#!'):
-                a.setAbstract(line)
+                if a.setAbstract(line) == -1:
+                    countAbstractExceptions += 1
+                    print('Abstract total: ' + str(countHasAbstract))
+                    print('Abstract error: ' + str(countAbstractExceptions))
                 if len(a.abstract) > maxAbstractLen:
                     maxAbstractLen = len(a.abstract)
-                if len(line) > 3:
+                if len(a.abstract) > 0:
                     countHasAbstract += 1
+                allKeywords.update(a.keywordsArticle)
+                if len(a.keywordsArticle) > maxKeywordsArticle:
+                    maxKeywordsArticle = len(a.keywordsArticle)
 
             if line == b'\n':
                 #print(a.tostring())
                 countArticles += 1
-                if (countArticles % 1000) == 0:
+                if False and (countArticles % 1000) == 0:
                     print('Articles proceeded: ' + str(countArticles))
                     print('Reference count: ' + str(countReferences))
                     print('Max abstract length: ' + str(maxAbstractLen))
@@ -117,3 +144,6 @@ if __name__ == '__main__':
     print('Articles have abstract: ' + str(countHasAbstract))
     print('Max abstract length: ' + str(maxAbstractLen))
     print('Max venue length: ' + str(maxVenueLen))
+    print('Max keywords in one article: ' + str(maxKeywordsArticle))
+    print('Total keywords count: ' + str(len(allKeywords)))
+    print('Total exceptions while extracting keywords: ' + str(countAbstractExceptions))
