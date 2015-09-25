@@ -8,9 +8,9 @@ from summa import keywords
 
 #-------------------------------------------------------------------------------
 filename = '../../data/data.txt' # default filename
-startIndex = 1631042
+startIndex = 0#1631042
 extractKeywords = True#False
-maxKeywordsFromArticle = 20      # how many keywords should be extracted
+maxKeywordsFromArticle = 15      # how many keywords should be extracted
 
 #-------------------------------------------------------------------------------
 class Article:

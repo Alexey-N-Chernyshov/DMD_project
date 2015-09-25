@@ -17,7 +17,7 @@ pip install pattern
 pip install networkx
 sudo pip install summa
 
-//=================================================================================
+//==============================================================================
 Work is over! Time: 44073s
 Indexes proceeded: 1632442
 Articles proceeded: 1632442
@@ -30,8 +30,20 @@ Total keywords count: 330982
 Abstract total: 653497
 Total exceptions while extracting keywords: 983
 
+//------------------------------------------------------------------------------
+Work is over! Time: 31406s
+Indexes proceeded: 1632442
+Articles proceeded: 1632442
+Reference count: 2327450
+Articles have abstract: 653510
+Max abstract length: 29895
+Max venue length: 239
+Max keywords in one article: 25
+Total unique keywords count: 330707
+Total keywords in all articles: 3620923
+Total exceptions while extracting keywords: 983
 
-//=================================================================================
+//==============================================================================
 ER model:
 
 Article
@@ -43,6 +55,7 @@ Article
 Author
 - AuthorID
 - Name
+- Institute (text)
 
 (rel) Article_Author m:n
 - articleID
