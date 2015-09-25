@@ -8,7 +8,8 @@ from summa import keywords
 
 #-------------------------------------------------------------------------------
 filename = '../../data/data.txt' # default filename
-startIndex = 0#1631042
+outFilename = 'out.txt'              # default output file
+startIndex = 0
 extractKeywords = True#False
 maxKeywordsFromArticle = 15      # how many keywords should be extracted
 
@@ -18,10 +19,10 @@ class Article:
     name = ''
     year = 0
     venue = ''
-    author = []
+    authors = []
     references = []
     abstract = ''
-    keywordsArticle = {}
+    keywordsArticle = []
 
     def __init__(self):
         self.references = list()
@@ -32,8 +33,8 @@ class Article:
     def setName(self, line):
         self.name = line[2:-1].decode('cp866')
 
-    def setAuthor(self, line):
-        self.author = line[2:-1].decode('cp866').split(',')
+    def setAuthors(self, line):
+        self.authors = line[2:-1].decode('cp866').split(',')
 
     def setYear(self, line):
         self.year = int(line[2:-1])
@@ -50,7 +51,7 @@ class Article:
             self.abstract = text.decode('cp866')
             if extractKeywords:
                 try:
-                    self.keywordsArticle = set(keywords.keywords(text).split('\n')[0:maxKeywordsFromArticle])
+                    self.keywordsArticle = keywords.keywords(text).split('\n')[0:maxKeywordsFromArticle]
                     return 0
                 except Exception as e:
                     print('Exception while extracting keywords from article id: ' +\
@@ -70,11 +71,17 @@ class Article:
 
 def createParser ():
     parser = argparse.ArgumentParser()
-    parser.add_argument ('-f', '--file', help='Database file', default=filename)
+    parser.add_argument('-f', '--file', help='Database file', default=filename)
+    parser.add_argument('-i', '--index', help='Start from index', default=startIndex)
+    parser.add_argument('-o', '--outfile', help='Output file', default=outFilename)
     return parser
 
 if __name__ == '__main__':
-    allKeywords = set()
+    allKeywords = []
+    allAuthors = []
+    refAuthorArticle = []
+    refArticleKeyword = []
+    refArticleCite = []
 
     startTime = time.time()
     countIndexes = 0
@@ -90,10 +97,17 @@ if __name__ == '__main__':
     parser = createParser()
     namespace = parser.parse_args(sys.argv[1:])
     filename = namespace.file
+    startIndex = int(namespace.index)
+    outFilename = namespace.outfile
+    outfile = open(outFilename, 'wb', 1)
+
+    outfile.write('\nINSERT INTO article (id, paper_title, year, venue) VALUES\n')
+    notWriteComma = True
 
     with open(filename, 'rb', 1) as infile:
         print('Open file ' + infile.name)
         a = Article()
+        infile.readline() # skip first line
         for line in infile:
             # #index starts article index
             if line.startswith(b'#index'):
@@ -106,7 +120,7 @@ if __name__ == '__main__':
 
             # #@ starts article author
             if line.startswith(b'#@'):
-                a.setAuthor(line)
+                a.setAuthors(line)
 
             # #t starts article year
             if line.startswith(b'#t'):
@@ -125,7 +139,7 @@ if __name__ == '__main__':
 
             # #a starts article abstract
             if line.startswith(b'#!'):
-                if a.index > startIndex:
+                if a.index >= startIndex:
                     if a.setAbstract(line) == -1:
                         countAbstractExceptions += 1
                         print('Abstract total: ' + str(countHasAbstract))
@@ -134,7 +148,6 @@ if __name__ == '__main__':
                         maxAbstractLen = len(a.abstract)
                     if len(a.abstract) > 0:
                         countHasAbstract += 1
-                    allKeywords.update(a.keywordsArticle)
                     countAllKeywords += len(a.keywordsArticle)
                     if len(a.keywordsArticle) > maxKeywordsArticle:
                         maxKeywordsArticle = len(a.keywordsArticle)
@@ -143,6 +156,26 @@ if __name__ == '__main__':
                 #if a.index > startIndex:
                     #print(a.tostring())
                 countArticles += 1
+
+                for autor in a.authors:
+                    if autor not in allAuthors:
+                        allAuthors.append(autor)
+                    refAuthorArticle.append((a.index, allAuthors.index(autor)))
+
+                for keyword in a.keywordsArticle:
+                    if keyword not in allKeywords:
+                        allKeywords.append(keyword)
+                    refArticleKeyword.append((a.index, allKeywords.index(keyword)))
+
+                for ref in a.references:
+                    refArticleCite.append((a.index, ref))
+
+                if notWriteComma:
+                    notWriteComma = False
+                else:
+                    outfile.write(',\n')
+                outfile.write('(' + str(a.index) + ', "' + a.name + '", ' + str(a.year) + ', "'+ a.venue + '")')
+
                 if False: #(countArticles % 1000) == 0:
                     print('Articles proceeded: ' + str(countArticles))
                     print('Reference count: ' + str(countReferences))
@@ -152,11 +185,66 @@ if __name__ == '__main__':
                     print()
                 a = Article()
 
-    print('Work is over! Time: %.0ds' % (time.time() - startTime))
+    outfile.write(';\n')
+    outfile.write('\nINSERT INTO author (id, name, institute) VALUES\n')
+    i = 0
+    notWriteComma = True
+    for author in allAuthors:
+        if notWriteComma:
+            notWriteComma = False
+        else:
+            outfile.write(',\n')
+        outfile.write('(' + str(i) + ', "' + author.encode('utf8') + '", "")')
+        i += 1
+
+    outfile.write(';\n')
+    notWriteComma = True
+    outfile.write('\nINSERT INTO article_author (article_id, author_id) VALUES\n')
+    for ref in refAuthorArticle:
+        if notWriteComma:
+            notWriteComma = False
+        else:
+            outfile.write(',\n')
+        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
+
+    i = 0
+    outfile.write(';\n')
+    notWriteComma = True
+    outfile.write('\nINSERT INTO keyword (id, tag) VALUES\n')
+    for keyword in allKeywords:
+        if notWriteComma:
+            notWriteComma = False
+        else:
+            outfile.write(',\n')
+        outfile.write('(' + str(i) + ', "' + keyword + '")')
+        i += 1
+
+    outfile.write(';\n')
+    notWriteComma = True
+    outfile.write('\nINSERT INTO article_keyword (article_id, keyword_id) VALUES\n')
+    for ref in refArticleKeyword:
+        if notWriteComma:
+            notWriteComma = False
+        else:
+            outfile.write(',\n')
+        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
+
+    outfile.write(';\n')
+    notWriteComma = True
+    outfile.write('\nINSERT INTO cite (from_id, to_id) VALUES\n')
+    for ref in refArticleCite:
+        if notWriteComma:
+            notWriteComma = False
+        else:
+            outfile.write(',\n')
+        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
+    outfile.write(';\n')
+
+    print('Work is over! Time: %0.ds' % (time.time() - startTime))
     print('Indexes proceeded: ' + str(countIndexes))
     print('Articles proceeded: ' + str(countArticles))
     print('Reference count: ' + str(countReferences))
-    print('Articles have abstract: ' + str(countHasAbstract))
+    print('Abstarct proceeded: ' + str(countHasAbstract))
     print('Max abstract length: ' + str(maxAbstractLen))
     print('Max venue length: ' + str(maxVenueLen))
     print('Max keywords in one article: ' + str(maxKeywordsArticle))
