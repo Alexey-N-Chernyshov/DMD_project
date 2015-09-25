@@ -174,7 +174,8 @@ if __name__ == '__main__':
                     notWriteComma = False
                 else:
                     outfile.write(',\n')
-                outfile.write('(' + str(a.index) + ', "' + a.name + '", ' + str(a.year) + ', "'+ a.venue + '")')
+                venue = "NULL" if len(a.venue) == 0 else "'" + a.venue.encode("utf8") + "'"
+                outfile.write("(" + str(a.index) + ", '" + a.name.encode("utf8") + "', " + str(a.year) + ", " + venue + ")")
 
                 if False: #(countArticles % 1000) == 0:
                     print('Articles proceeded: ' + str(countArticles))
@@ -194,7 +195,7 @@ if __name__ == '__main__':
             notWriteComma = False
         else:
             outfile.write(',\n')
-        outfile.write('(' + str(i) + ', "' + author.encode('utf8') + '", "")')
+        outfile.write("(" + str(i) + ", '" + author.encode('utf8') + "', NULL)")
         i += 1
 
     outfile.write(';\n')
@@ -216,7 +217,7 @@ if __name__ == '__main__':
             notWriteComma = False
         else:
             outfile.write(',\n')
-        outfile.write('(' + str(i) + ', "' + keyword + '")')
+        outfile.write("(" + str(i) + ", '" + keyword.encode("utf8") + "')")
         i += 1
 
     outfile.write(';\n')
