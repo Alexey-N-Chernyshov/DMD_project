@@ -42,8 +42,8 @@ CREATE TABLE article_keyword
 
 CREATE TABLE cite
 (
-  id_from INTEGER,
-  id_to INTEGER,
+  from_id INTEGER,
+  to_id INTEGER,
   FOREIGN KEY (id_from) REFERENCES article (id),
   FOREIGN KEY (id_to) REFERENCES article (id),
   CONSTRAINT uc_article_cite PRIMARY KEY (id_from, id_to)
