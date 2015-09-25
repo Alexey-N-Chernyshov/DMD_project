@@ -44,7 +44,7 @@ CREATE TABLE cite
 (
   from_id INTEGER,
   to_id INTEGER,
-  FOREIGN KEY (id_from) REFERENCES article (id),
-  FOREIGN KEY (id_to) REFERENCES article (id),
-  CONSTRAINT uc_article_cite PRIMARY KEY (id_from, id_to)
+  FOREIGN KEY (from_id) REFERENCES article (id),
+  FOREIGN KEY (to_id) REFERENCES article (id),
+  CONSTRAINT uc_article_cite PRIMARY KEY (from_id, to_id)
 );
