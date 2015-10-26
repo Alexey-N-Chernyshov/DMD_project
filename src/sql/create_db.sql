@@ -9,7 +9,7 @@
 
 CREATE TABLE author
 (
-  id INTEGER NOT NULL,
+  id SERIAL,
   name TEXT NOT NULL,
   institute TEXT,
   CONSTRAINT author_id PRIMARY KEY (id)
@@ -26,7 +26,7 @@ CREATE TABLE article_author
 
 CREATE TABLE keyword
 (
-  id INTEGER,
+  id SERIAL,
   tag TEXT NOT NULL,
   CONSTRAINT pk_keyword PRIMARY KEY (id)
 );
