@@ -177,13 +177,18 @@ if __name__ == '__main__':
                 venue = "NULL" if len(a.venue) == 0 else "'" + a.venue.encode("utf8") + "'"
                 outfile.write("(" + str(a.index) + ", '" + a.name.encode("utf8") + "', " + str(a.year) + ", " + venue + ")")
 
-                if False: #(countArticles % 1000) == 0:
+                if (countArticles % 10000) == 0:
+                    print('----------------------------------------------------')
+                    print('Estimate time: %0.ds' % (time.time() - startTime))
                     print('Articles proceeded: ' + str(countArticles))
                     print('Reference count: ' + str(countReferences))
                     print('Max abstract length: ' + str(maxAbstractLen))
                     print('Max venue length: ' + str(maxVenueLen))
-                    print(a.tostring())
-                    print()
+                    print('Total unique keywords: ' + str(len(allKeywords)))
+                    print('Total keywords: ' + str(len(refArticleKeyword)))
+                    print('Total unique authors: ' + str(len(allAuthors)))
+                    print('Total authors: ' + str(len(refAuthorArticle)))
+                    print('Total cites: ' + str(len(refArticleCite)))
                 a = Article()
 
     outfile.write(';\n')
