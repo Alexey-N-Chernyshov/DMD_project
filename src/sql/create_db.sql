@@ -40,7 +40,7 @@ CREATE TABLE article_keyword
   CONSTRAINT uc_article_keyword PRIMARY KEY (article_id, keyword_id)
 );
 
-CREATE TABLE cite
+CREATE TABLE reference
 (
   from_id INTEGER,
   to_id INTEGER,
