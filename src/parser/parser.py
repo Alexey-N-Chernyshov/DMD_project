@@ -3,12 +3,15 @@
 
 import argparse
 import time
+import psycopg2
+import psycopg2.extensions
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 import sys
 from summa import keywords
 
 #-------------------------------------------------------------------------------
 filename = '../../data/data.txt' # default filename
-outFilename = 'out.txt'              # default output file
 startIndex = 0
 extractKeywords = True#False
 maxKeywordsFromArticle = 15      # how many keywords should be extracted
@@ -73,16 +76,10 @@ def createParser ():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='Database file', default=filename)
     parser.add_argument('-i', '--index', help='Start from index', default=startIndex)
-    parser.add_argument('-o', '--outfile', help='Output file', default=outFilename)
     return parser
 
 if __name__ == '__main__':
-    allKeywords = []
-    allAuthors = []
-    refAuthorArticle = []
-    refArticleKeyword = []
-    refArticleCite = []
-
+    #statistics
     startTime = time.time()
     countIndexes = 0
     countArticles = 0
@@ -93,16 +90,23 @@ if __name__ == '__main__':
     maxKeywordsArticle = 0
     countAllKeywords = 0        # counts all keywords from all articles (non-unique)
     countAbstractExceptions = 0
+    doesAbstractParse = False   # set True for parsing abstracts
 
+    #parse args
     parser = createParser()
     namespace = parser.parse_args(sys.argv[1:])
     filename = namespace.file
     startIndex = int(namespace.index)
-    outFilename = namespace.outfile
-    outfile = open(outFilename, 'wb', 1)
 
-    outfile.write('\nINSERT INTO article (id, paper_title, year, venue) VALUES\n')
-    notWriteComma = True
+    #Define our connection string
+    conn_string = "host='localhost' dbname='dmd_project' user='postgres' password='postgres'"
+    # print the connection string we will use to connect
+    print("Connecting to database\n	->%s" % (conn_string))
+    # get a connection, if a connect cannot be made an exception will be raised here
+    conn = psycopg2.connect(conn_string)
+    # conn.cursor will return a cursor object, you can use this cursor to perform queries
+    cursor = conn.cursor()
+    print("Connected!\n")
 
     with open(filename, 'rb', 1) as infile:
         print('Open file ' + infile.name)
@@ -132,7 +136,7 @@ if __name__ == '__main__':
                 if len(a.venue) > maxVenueLen:
                     maxVenueLen = len(a.venue)
 
-            # #c starts article reference
+            # #% starts article reference
             if line.startswith(b'#%'):
                 a.setReference(line)
                 countReferences += 1
@@ -140,42 +144,75 @@ if __name__ == '__main__':
             # #a starts article abstract
             if line.startswith(b'#!'):
                 if a.index >= startIndex:
-                    if a.setAbstract(line) == -1:
-                        countAbstractExceptions += 1
-                        print('Abstract total: ' + str(countHasAbstract))
-                        print('Abstract error: ' + str(countAbstractExceptions))
-                    if len(a.abstract) > maxAbstractLen:
-                        maxAbstractLen = len(a.abstract)
-                    if len(a.abstract) > 0:
-                        countHasAbstract += 1
-                    countAllKeywords += len(a.keywordsArticle)
-                    if len(a.keywordsArticle) > maxKeywordsArticle:
-                        maxKeywordsArticle = len(a.keywordsArticle)
+                    if doesAbstractParse:
+                        if a.setAbstract(line) == -1:
+                            countAbstractExceptions += 1
+                            print('Abstract total: ' + str(countHasAbstract))
+                            print('Abstract error: ' + str(countAbstractExceptions))
+                        if len(a.abstract) > maxAbstractLen:
+                            maxAbstractLen = len(a.abstract)
+                        if len(a.abstract) > 0:
+                            countHasAbstract += 1
+                        countAllKeywords += len(a.keywordsArticle)
+                        if len(a.keywordsArticle) > maxKeywordsArticle:
+                            maxKeywordsArticle = len(a.keywordsArticle)
 
+            #article has been read
             if line == b'\n':
-                #if a.index > startIndex:
-                    #print(a.tostring())
                 countArticles += 1
+                if a.index >= startIndex:
+                    #insert article into db
+                    try:
+                        cursor.execute("INSERT INTO article(id, paper_title, year, venue) VALUES (%s, %s, %s, %s)", (str(a.index), a.name.encode("utf8"), str(a.year), a.venue.encode("utf8")))
+                        conn.commit()
+                    except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                        print("Smth get wrong, but ok... ", exc)
 
-                for autor in a.authors:
-                    if autor not in allAuthors:
-                        allAuthors.append(autor)
-                    refAuthorArticle.append((a.index, allAuthors.index(autor)))
+                    #insert authors
+                    for author in a.authors:
+                        try:
+                            cursor.execute("INSERT INTO author(name, institute) VALUES (%s, %s)", (author.encode("utf8"), "NULL"))
+                            conn.commit()
+                        except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                            print("Smth get wrong, but ok... ", exc)
+                            conn.rollback()
 
-                for keyword in a.keywordsArticle:
-                    if keyword not in allKeywords:
-                        allKeywords.append(keyword)
-                    refArticleKeyword.append((a.index, allKeywords.index(keyword)))
+                        #insert article_author references
+                        try:
+                            cursor.execute("SELECT id FROM author WHERE name = %s LIMIT 1", (author.encode("utf8"), ))
+                            row = cursor.fetchone()
+                            authorId = row[0]
+                            cursor.execute("INSERT INTO article_author(article_id, author_id) VALUES (%s, %s)", (a.index, authorId))
+                        except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                            print("Smth get wrong, but ok... ", exc)
+                            conn.rollback()
 
-                for ref in a.references:
-                    refArticleCite.append((a.index, ref))
+                    #insert keywords
+                    for keyword in a.keywordsArticle:
+                        try:
+                            cursor.execute("INSERT INTO keyword(tag) VALUES (%s)", (keyword, ))
+                            conn.commit()
+                        except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                            print("Smth get wrong, but ok... ", exc)
+                            conn.rollback()
 
-                if notWriteComma:
-                    notWriteComma = False
-                else:
-                    outfile.write(',\n')
-                venue = "NULL" if len(a.venue) == 0 else "'" + a.venue.encode("utf8") + "'"
-                outfile.write("(" + str(a.index) + ", '" + a.name.encode("utf8") + "', " + str(a.year) + ", " + venue + ")")
+                        #insert article_author references
+                        try:
+                            cursor.execute("SELECT id FROM keyword WHERE tag = %s LIMIT 1", (keyword, ))
+                            row = cursor.fetchone()
+                            keywordId = row[0]
+                            cursor.execute("INSERT INTO article_keyword(article_id, keyword_id) VALUES (%s, %s)", (a.index, keywordId))
+                        except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                            print("Smth get wrong, but ok... ", exc)
+                            conn.rollback()
+
+                    for ref in a.references:
+                        try:
+                            cursor.execute("INSERT INTO reference(from_id, to_id) VALUES (%s, %s)", (a.index, ref))
+                            conn.commit()
+                        except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
+                            print("Smth get wrong, but ok... ", exc)
+                            conn.rollback()
 
                 if (countArticles % 10000) == 0:
                     print('----------------------------------------------------')
@@ -184,67 +221,7 @@ if __name__ == '__main__':
                     print('Reference count: ' + str(countReferences))
                     print('Max abstract length: ' + str(maxAbstractLen))
                     print('Max venue length: ' + str(maxVenueLen))
-                    print('Total unique keywords: ' + str(len(allKeywords)))
-                    print('Total keywords: ' + str(len(refArticleKeyword)))
-                    print('Total unique authors: ' + str(len(allAuthors)))
-                    print('Total authors: ' + str(len(refAuthorArticle)))
-                    print('Total cites: ' + str(len(refArticleCite)))
                 a = Article()
-
-    outfile.write(';\n')
-    outfile.write('\nINSERT INTO author (id, name, institute) VALUES\n')
-    i = 0
-    notWriteComma = True
-    for author in allAuthors:
-        if notWriteComma:
-            notWriteComma = False
-        else:
-            outfile.write(',\n')
-        outfile.write("(" + str(i) + ", '" + author.encode('utf8') + "', NULL)")
-        i += 1
-
-    outfile.write(';\n')
-    notWriteComma = True
-    outfile.write('\nINSERT INTO article_author (article_id, author_id) VALUES\n')
-    for ref in refAuthorArticle:
-        if notWriteComma:
-            notWriteComma = False
-        else:
-            outfile.write(',\n')
-        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
-
-    i = 0
-    outfile.write(';\n')
-    notWriteComma = True
-    outfile.write('\nINSERT INTO keyword (id, tag) VALUES\n')
-    for keyword in allKeywords:
-        if notWriteComma:
-            notWriteComma = False
-        else:
-            outfile.write(',\n')
-        outfile.write("(" + str(i) + ", '" + keyword.encode("utf8") + "')")
-        i += 1
-
-    outfile.write(';\n')
-    notWriteComma = True
-    outfile.write('\nINSERT INTO article_keyword (article_id, keyword_id) VALUES\n')
-    for ref in refArticleKeyword:
-        if notWriteComma:
-            notWriteComma = False
-        else:
-            outfile.write(',\n')
-        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
-
-    outfile.write(';\n')
-    notWriteComma = True
-    outfile.write('\nINSERT INTO cite (from_id, to_id) VALUES\n')
-    for ref in refArticleCite:
-        if notWriteComma:
-            notWriteComma = False
-        else:
-            outfile.write(',\n')
-        outfile.write('(' + str(ref[0]) + ', ' + str(ref[1]) + ')')
-    outfile.write(';\n')
 
     print('Work is over! Time: %0.ds' % (time.time() - startTime))
     print('Indexes proceeded: ' + str(countIndexes))
@@ -254,6 +231,5 @@ if __name__ == '__main__':
     print('Max abstract length: ' + str(maxAbstractLen))
     print('Max venue length: ' + str(maxVenueLen))
     print('Max keywords in one article: ' + str(maxKeywordsArticle))
-    print('Total unique keywords count: ' + str(len(allKeywords)))
     print('Total keywords in all articles: ' + str(countAllKeywords))
     print('Total exceptions while extracting keywords: ' + str(countAbstractExceptions))
