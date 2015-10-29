@@ -90,7 +90,7 @@ if __name__ == '__main__':
     maxKeywordsArticle = 0
     countAllKeywords = 0        # counts all keywords from all articles (non-unique)
     countAbstractExceptions = 0
-    doesAbstractParse = False   # set True for parsing abstracts
+    doesAbstractParse = True   # set True for parsing abstracts
 
     #parse args
     parser = createParser()
@@ -167,6 +167,7 @@ if __name__ == '__main__':
                         conn.commit()
                     except (psycopg2.IntegrityError, psycopg2.InternalError) as exc:
                         print("Smth get wrong, but ok... ", exc)
+                        conn.rollback()
 
                     #insert authors
                     for author in a.authors:
