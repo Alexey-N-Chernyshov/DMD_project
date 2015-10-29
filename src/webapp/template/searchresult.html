@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search results</title>
+  </head>
+  <body>
+    <h1>Search result</h1>
+
+    <h2>Authors</h2>
+    {% for article in articles %}
+      <p><a href="/article?id={{article[0]}}" >
+        id = {{article[0]}}, title = {{article[1]}}, venue = {{article[2]}}, year = {{article[3]}}
+      </a></p>
+    {% end %}
+
+    <form method="post" action="/searchresult">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="text" name="title" value="{{title}}" hidden="True">
+      <input type="text" name="author" value="{{author}}" hidden="True">
+      <input type="text" name="venue"  value="{{venue}}" hidden="True">
+      <input type="number" name="year" value="{{year}}" hidden="True">
+      <input type="text" name="keyword" value="{{keyword}}" hidden="True">
+      <input type="number" name="offset" value="{{int(offset) - 20}}" hidden="True">
+      <input type="submit" value="<-">
+    </form>
+
+    <form method="post" action="/searchresult">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="text" name="title" value="{{title}}" hidden="True">
+      <input type="text" name="author" value="{{author}}" hidden="True">
+      <input type="text" name="venue"  value="{{venue}}" hidden="True">
+      <input type="number" name="year" value="{{year}}" hidden="True">
+      <input type="text" name="keyword" value="{{keyword}}" hidden="True">
+      <input type="number" name="offset" value="{{int(offset) + 20}}" hidden="True">
+      <input type="submit" value="->">
+    </form>
+
+  </body>
+</html>
