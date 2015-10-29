@@ -1,10 +1,9 @@
 ﻿SELECT 
-   article.paper_title, cite.to_id, count(*)
+   article.paper_title, reference.to_id, count(*)
 FROM 
   article,
-  cite
+  reference
 WHERE 
-  article.id = cite.to_id
-GROUP BY cite.to_id, article.paper_title
-ORDER BY
-  count(*) DESC
+  article.id = reference.to_id
+GROUP BY reference.to_id, article.paper_title
+ORDER BY count(*) DESC
