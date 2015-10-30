@@ -6,6 +6,7 @@ import tornado.options
 import tornado.web
 
 import psycopg2
+import hashlib, binascii # for authentication
 
 import Settings
 
@@ -29,9 +30,11 @@ class SearchResultHandler(tornado.web.RequestHandler):
             offset = 0
 
         query = """SELECT article.id, paper_title, venue, year FROM
-            article, article_author, author, article_keyword, keyword WHERE
-            article_author.article_id=article.id AND author_id=author.id AND
-            article_keyword.article_id=article.id AND keyword_id=keyword.id"""
+            article LEFT OUTER JOIN article_author ON article.id = article_author.article_id
+            LEFT OUTER JOIN article_keyword ON article_keyword.article_id=article.id
+            LEFT OUTER JOIN keyword ON keyword_id=keyword.id
+            LEFT OUTER JOIN author ON author_id=author.id
+            WHERE TRUE"""
         if id:
             query += ' AND article.id=' + id
         if title:
@@ -44,7 +47,7 @@ class SearchResultHandler(tornado.web.RequestHandler):
             query += ' AND year=' + year
         if keyword:
            query += """ AND tag='""" + keyword + """'"""
-        query += ' OFFSET ' + str(offset)
+        query += ' GROUP BY article.id OFFSET ' + str(offset)
         query += ' LIMIT 20'
 
         cur = conn.cursor()
@@ -88,10 +91,37 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("user")
 
-class MainHandler(BaseHandler):
+class SearchHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render('index.html')
+        self.render('search.html')
+
+
+class AuthSigninHandler(BaseHandler):
+    def get(self):
+        self.render("signin.html")
+
+    def post(self):
+        username = self.get_argument("username", "")
+        password = self.get_argument("password", "")
+
+        dk = hashlib.pbkdf2_hmac('sha256', bytearray(username, 'utf8'), b'salt', 100000)
+        username_hashed = binascii.hexlify(dk).decode("ascii")
+        dk = hashlib.pbkdf2_hmac('sha256', bytearray(password, 'utf8'), b'salt', 100000)
+        password_hashed = binascii.hexlify(dk).decode("ascii")
+
+        #get hash password from database
+        conn_auth = psycopg2.connect("dbname='dmd_project' user='postgres' host='localhost' password='2qfksh4g'")
+        cur_auth = conn_auth.cursor()
+        cur_auth.execute("""INSERT INTO auth (login, pass) VALUES (%s, %s);""", (username_hashed, password_hashed))
+        conn_auth.commit()
+        cur_auth.close()
+        conn_auth.close()
+
+        if True:
+            self.redirect(self.get_argument("next", u"/auth/login/"))
+        else:
+            self.render("signin.html")
 
 class AuthLoginHandler(BaseHandler):
     def get(self):
@@ -102,7 +132,26 @@ class AuthLoginHandler(BaseHandler):
         self.render("login.html", errormessage = errormessage)
 
     def check_permission(self, password, username):
-        if username == "admin" and password == "admin":
+        #get hash of name
+        dk = hashlib.pbkdf2_hmac('sha256', bytearray(username, 'utf8'), b'salt', 100000)
+        username_hashed = binascii.hexlify(dk).decode("ascii")
+
+        #get hash password from database
+        conn_auth = psycopg2.connect("dbname='dmd_project' user='postgres' host='localhost' password='2qfksh4g'")
+        cur_auth = conn_auth.cursor()
+        cur_auth.execute("""SELECT login, pass FROM auth WHERE login=%s;""", (str(username_hashed), ))
+        auth_res = cur_auth.fetchone()
+        if auth_res == None:
+            cur_auth.close()
+            conn_auth.close()
+            return False
+        password_hashed = auth_res[1]
+        cur_auth.close()
+        conn_auth.close()
+
+        #hash incoming pass and compare
+        dk = hashlib.pbkdf2_hmac('sha256', bytearray(password, 'utf8'), b'salt', 100000)
+        if password_hashed == binascii.hexlify(dk).decode("ascii"):
             return True
         return False
 
@@ -112,7 +161,7 @@ class AuthLoginHandler(BaseHandler):
         auth = self.check_permission(password, username)
         if auth:
             self.set_current_user(username)
-            self.redirect(self.get_argument("next", u"/"))
+            self.redirect(self.get_argument("next", u"/search/"))
         else:
             error_msg = u"?error=" + tornado.escape.url_escape("Login incorrect")
             self.redirect(u"/auth/login/" + error_msg)
@@ -131,7 +180,8 @@ class AuthLogoutHandler(BaseHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", MainHandler),
+            (r"/search/", SearchHandler),
+            (r"/auth/signin/", AuthSigninHandler),
             (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
             (r'/article', ArticleHandler),
