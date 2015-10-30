@@ -16,3 +16,15 @@ console = logging.StreamHandler(sys.stderr)
 #import uuid
 #base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
 COOKIE_SECRET = 'L8LwECiNRxq2N0N2eGxx9MZlrpmuMEimlydNX/vt1LM='
+
+#database
+db_name = "dmd_project"
+db_username = "postgres"
+db_host = "localhost"
+db_password = "2qfksh4g"
+
+#database for authentication
+auth_db_name = "dmd_project"
+auth_db_username = "postgres"
+auth_db_host = "localhost"
+auth_db_password = "2qfksh4g"
