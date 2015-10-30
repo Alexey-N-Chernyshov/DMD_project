@@ -1,0 +1,13 @@
+"C:\Python34\Lib\site-packages\easy_install.py" tornado
+
+=============================================================
+DO NOT USE !!!!---pip3 install psycorp2
+http://www.stickpeople.com/projects/python/win-psycopg/
+
+=============================================================
+HOW TO INSTALL DB:
+1. import dump
+psql -U username -f 'infile' database_name
+2. execute query to add auth table
+src\sql\auth\create_auth.sql
+3. configure Settings.py - set passwords, usernames

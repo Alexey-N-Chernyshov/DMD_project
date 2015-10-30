@@ -104,6 +104,29 @@ class SearchHandler(BaseHandler):
     def get(self):
         self.render('search.html')
 
+class AddArticleHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('addarticle.html')
+
+    def post(self):
+        title = self.get_argument('title')
+        author = self.get_argument('author')
+        venue = self.get_argument('venue')
+        year = self.get_argument('year')
+        keyword = self.get_argument('keyword')
+        ref_to = self.get_argument('ref_to').split(",")
+        ref_from = self.get_argument('ref_from').split(",")
+
+        print(title)
+        print(author)
+        print(venue)
+        print(year)
+        print(keyword)
+        print(ref_to)
+        print(ref_from)
+
+        self.render('search.html')
 
 class AuthSigninHandler(BaseHandler):
     def get(self):
@@ -202,6 +225,7 @@ class Application(tornado.web.Application):
             (r"/search/", SearchHandler),
             (r'/article/', ArticleHandler),
             (r'/searchresult/', SearchResultHandler),
+            (r'/addarticle/', AddArticleHandler),
         ]
         settings = {
             "template_path":Settings.TEMPLATE_PATH,
