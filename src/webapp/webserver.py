@@ -14,10 +14,21 @@ from tornado.options import define, options
 
 define("port", default=8000, help="run on the given port", type=int)
 
-conn = psycopg2.connect("dbname='dmd_project' user='postgres' host='localhost' password='2qfksh4g'")
+conn = psycopg2.connect("dbname='" + Settings.db_name + "' user='"
+    + Settings.db_username + "' host='" + Settings.db_host +"' password='" + Settings.db_password + "'")
+
+class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie("user")
+
+class MainHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.redirect(self.get_argument("next", u"/search/"))
 
 #hadle search results. Displays all found articles in list
-class SearchResultHandler(tornado.web.RequestHandler):
+class SearchResultHandler(BaseHandler):
+    @tornado.web.authenticated
     def post(self):
         id = self.get_argument('id')
         title = self.get_argument('title')
@@ -42,7 +53,7 @@ class SearchResultHandler(tornado.web.RequestHandler):
         if author:
             query += """ AND author.name='""" + author + """'"""
         if venue:
-            query += ' AND venue=' + venue
+            query += """ AND venue='""" + venue + """'"""
         if year:
             query += ' AND year=' + year
         if keyword:
@@ -58,7 +69,8 @@ class SearchResultHandler(tornado.web.RequestHandler):
         self.render('searchresult.html', articles=articles, id=id, title=title,
             author=author, venue=venue, year=year, offset=offset, keyword=keyword)
 
-class ArticleHandler(tornado.web.RequestHandler):
+class ArticleHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         id = self.get_argument('id')
         cur = conn.cursor()
@@ -87,10 +99,6 @@ class ArticleHandler(tornado.web.RequestHandler):
     def write_error(self, status_code, **kwargs):
         self.write("You caused a %d error." % status_code)
 
-class BaseHandler(tornado.web.RequestHandler):
-    def get_current_user(self):
-        return self.get_secure_cookie("user")
-
 class SearchHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -111,12 +119,17 @@ class AuthSigninHandler(BaseHandler):
         password_hashed = binascii.hexlify(dk).decode("ascii")
 
         #get hash password from database
-        conn_auth = psycopg2.connect("dbname='dmd_project' user='postgres' host='localhost' password='2qfksh4g'")
-        cur_auth = conn_auth.cursor()
-        cur_auth.execute("""INSERT INTO auth (login, pass) VALUES (%s, %s);""", (username_hashed, password_hashed))
-        conn_auth.commit()
-        cur_auth.close()
-        conn_auth.close()
+        try:
+            conn_auth = psycopg2.connect("dbname='" + Settings.auth_db_name +
+                "' user='" + Settings.auth_db_username + "' host='" +
+                Settings.auth_db_host +"' password='" + Settings.auth_db_password + "'")
+            cur_auth = conn_auth.cursor()
+            cur_auth.execute("""INSERT INTO auth (login, pass) VALUES (%s, %s);""", (username_hashed, password_hashed))
+            conn_auth.commit()
+            cur_auth.close()
+            conn_auth.close()
+        except:
+            self.render("signin.html")
 
         if True:
             self.redirect(self.get_argument("next", u"/auth/login/"))
@@ -137,7 +150,9 @@ class AuthLoginHandler(BaseHandler):
         username_hashed = binascii.hexlify(dk).decode("ascii")
 
         #get hash password from database
-        conn_auth = psycopg2.connect("dbname='dmd_project' user='postgres' host='localhost' password='2qfksh4g'")
+        conn_auth = psycopg2.connect("dbname='" + Settings.auth_db_name +
+            "' user='" + Settings.auth_db_username + "' host='" +
+            Settings.auth_db_host +"' password='" + Settings.auth_db_password + "'")
         cur_auth = conn_auth.cursor()
         cur_auth.execute("""SELECT login, pass FROM auth WHERE login=%s;""", (str(username_hashed), ))
         auth_res = cur_auth.fetchone()
@@ -180,12 +195,13 @@ class AuthLogoutHandler(BaseHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/search/", SearchHandler),
+            (r"/", MainHandler),
             (r"/auth/signin/", AuthSigninHandler),
             (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
-            (r'/article', ArticleHandler),
-            (r'/searchresult', SearchResultHandler),
+            (r"/search/", SearchHandler),
+            (r'/article/', ArticleHandler),
+            (r'/searchresult/', SearchResultHandler),
         ]
         settings = {
             "template_path":Settings.TEMPLATE_PATH,
