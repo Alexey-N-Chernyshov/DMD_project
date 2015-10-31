@@ -15,20 +15,20 @@
                         <fieldset>
                             <label for="username">Username</label>
                             <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
-                        </fieldset>
-
-                        <fieldset>
-                            <label for="password">Password</label>
+                        <br>
+                            <label for="password">Password&nbsp;</label>
                             <input class="text-input" id="password" name="password" tabindex="2" type="password" value="">
                         </fieldset>
-                        <fieldset>
-                            <a href="/auth/signin/">Sign in</a>
-                            <span class="errormessage">{{errormessage}}</span>
-                        </fieldset>
+                        
+							
+                       
+						
 
                         <div id="form_btn">
                             <input id="login-btn" class="btn btn-blue" type="submit" value="Log In" tabindex="3">
                             <!-- <a href="/sb/"><input id="inscription-btn" class="btn btn-red" value="Inscription" tabindex="3"></a> -->
+							<input value="Sign In" onclick="location.href='/auth/signin/'" type="button" />
+                            <span class="errormessage">{{errormessage}}</span>
                         </div>
                     </form>
                 </div>
