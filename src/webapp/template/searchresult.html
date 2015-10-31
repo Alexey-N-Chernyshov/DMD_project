@@ -6,6 +6,40 @@
   <body>
     <h1>Search result</h1>
 
+    <form method="post" action="/searchresult/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="text" name="title" value="{{title}}" hidden="True">
+      <input type="text" name="author" value="{{author}}" hidden="True">
+      <input type="text" name="venue"  value="{{venue}}" hidden="True">
+      <input type="number" name="year" value="{{year}}" hidden="True">
+      <input type="text" name="keyword" value="{{keyword}}" hidden="True">
+      <input type="number" name="offset" value="{{int(offset)}}" hidden="True">
+
+      <input type="radio" name="order" value="id"
+        {% if order == 'id' %}
+          checked="True"
+        {% else %}
+          ''
+        {% end %}
+      >  Order by id<br>
+      <input type="radio" name="order" value="title"
+      {% if order == 'title' %}
+        checked="True"
+      {% else %}
+        ''
+      {% end %}
+      > Order by title<br>
+      <input type="radio" name="order" value="year"
+      {% if order == 'year' %}
+        checked="True"
+      {% else %}
+        ''
+        {% end %}
+      > Order by year<br>
+
+      <input type="submit" value="apply">
+    </form>
+
     <h2>Articles</h2>
     {% for article in articles %}
       <p><a href="/article/?id={{article[0]}}">
@@ -21,6 +55,7 @@
       <input type="number" name="year" value="{{year}}" hidden="True">
       <input type="text" name="keyword" value="{{keyword}}" hidden="True">
       <input type="number" name="offset" value="{{int(offset) - 20}}" hidden="True">
+      <input type="text" name="order" value="{{order}}" hidden="True">
       <input type="submit" value="<-">
     </form>
 
@@ -32,6 +67,7 @@
       <input type="number" name="year" value="{{year}}" hidden="True">
       <input type="text" name="keyword" value="{{keyword}}" hidden="True">
       <input type="number" name="offset" value="{{int(offset) + 20}}" hidden="True">
+      <input type="text" name="order" value="{{order}}" hidden="True">
       <input type="submit" value="->">
     </form>
 

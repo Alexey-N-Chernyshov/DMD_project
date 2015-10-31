@@ -40,6 +40,9 @@ class SearchResultHandler(BaseHandler):
         if int(offset) < 0:
             offset = 0
 
+        order = self.get_argument('order', "by id def")
+        print(order)
+
         query = """SELECT article.id, paper_title, venue, year FROM
             article LEFT OUTER JOIN article_author ON article.id = article_author.article_id
             LEFT OUTER JOIN article_keyword ON article_keyword.article_id=article.id
@@ -58,8 +61,13 @@ class SearchResultHandler(BaseHandler):
             query += ' AND year=' + year
         if keyword:
            query += """ AND tag='""" + keyword + """'"""
-        query += ' GROUP BY article.id OFFSET ' + str(offset)
-        query += ' LIMIT 20'
+        if order == 'id':
+            query += ' ORDER BY article.id '
+        elif order == 'title':
+            query += ' ORDER BY article.paper_title '
+        elif order == 'year':
+            query += ' ORDER BY article.year '
+        query += 'OFFSET ' + str(offset) + ' LIMIT 20'
 
         cur = conn.cursor()
         cur.execute(query)
@@ -67,7 +75,7 @@ class SearchResultHandler(BaseHandler):
         cur.close()
 
         self.render('searchresult.html', articles=articles, id=id, title=title,
-            author=author, venue=venue, year=year, offset=offset, keyword=keyword)
+            author=author, venue=venue, year=year, offset=offset, keyword=keyword, order=order)
 
 class AuthorHandler(BaseHandler):
     @tornado.web.authenticated
