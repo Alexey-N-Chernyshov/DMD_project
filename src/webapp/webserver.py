@@ -158,7 +158,6 @@ class AuthorUpdateDeleteArticleHandler(BaseHandler):
         cur = conn.cursor()
         cur.execute("""DELETE FROM article_author
             WHERE author_id=%s AND article_id=%s""", (id, article_id))
-        print(cur.query)
         conn.commit()
         cur.close()
 
@@ -291,6 +290,187 @@ class ArticleDeleteHandler(BaseHandler):
 
         self.redirect(self.get_argument("next", u"/search/"))
 
+class ArticleUpdateHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        id = self.get_argument('id')
+        cur = conn.cursor()
+        cur.execute("""SELECT * FROM article WHERE id=%s;""", (id, ))
+        article = cur.fetchone()
+
+        cur.execute("""SELECT author.id,name FROM author, article_author
+                           WHERE author_id=author.id AND  article_id=%s""", (id, ))
+        authors = cur.fetchall()
+
+        cur.execute("""SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s""", (id, ))
+        tos = cur.fetchall()
+
+        cur.execute("""SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s""", (id, ))
+        froms = cur.fetchall()
+
+        cur.execute("""SELECT tag FROM keyword, article_keyword
+                            WHERE article_id=%s AND keyword_id=keyword.id""", (id, ))
+        keywords = cur.fetchall()
+
+        cur.close()
+
+        self.render('articleupdate.html', id=article[0], title=article[1], year=article[2],
+            venue=article[3], authors=authors, tos=tos, froms=froms, keywords=keywords)
+
+class ArticleUpdateSaveHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        title = self.get_argument('title')
+        year = self.get_argument('year')
+        venue = self.get_argument('venue')
+
+        cur = conn.cursor()
+        cur.execute("""UPDATE article SET id=%s, paper_title=%s, year=%s, venue=%s
+            WHERE id=%s""", (id, title, year, venue, id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/?id=" + id))
+
+class ArticleUpdateAddAuthorHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        name = self.get_argument('name')
+
+        cur = conn.cursor()
+        cur.execute("""SELECT id FROM author WHERE name=%s""", (name, ))
+        author_id = cur.fetchone()
+        if not author_id:
+            cur.execute("""INSERT INTO author(name, institute) VALUES
+                (%s, %s)""", (name, "NULL"))
+            conn.commit()
+            cur.execute("""SELECT author_id  author WHERE author.name=%s""", (name, ))
+            author_id = cur.fetchone()
+
+        try:
+            cur.execute("""INSERT INTO article_author (author_id, article_id)
+                VALUES (%s, %s)""", (author_id[0], id))
+            conn.commit()
+        except:
+            conn.rollback()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateDeleteAuthorHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        author_id = self.get_argument('author_id')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM article_author
+            WHERE author_id=%s AND article_id=%s""", (author_id, id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateAddKeywordHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        tag = self.get_argument('tag')
+        if tag:
+            cur = conn.cursor()
+            cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+            tag_id = cur.fetchone()
+            if not tag_id:
+                cur.execute("""INSERT INTO keyword(tag) VALUES
+                    (%s)""", (tag, ))
+                conn.commit()
+                cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+                tag_id = cur.fetchone()
+
+            try:
+                cur.execute("""INSERT INTO article_keyword (article_id, keyword_id)
+                    VALUES (%s, %s)""", (id, tag_id[0]))
+                conn.commit()
+            except:
+                conn.rollback()
+            cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateDeleteKeywordHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        tag = self.get_argument('tag')
+
+        cur = conn.cursor()
+        cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+        keyword_id = cur.fetchone()[0]
+        cur.execute("""DELETE FROM article_keyword
+            WHERE keyword_id=%s AND article_id=%s""", (keyword_id, id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateAddReftoHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('ref_to')
+
+        cur = conn.cursor()
+        cur.execute("""INSERT INTO reference (from_id, to_id)
+            VALUES (%s, %s)""", (id, article_id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateDeleteReftoHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('ref_to')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM reference
+            WHERE from_id=%s AND to_id=%s""", (id, article_id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateAddReffromHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('ref_from')
+
+        cur = conn.cursor()
+        cur.execute("""INSERT INTO reference (from_id, to_id)
+            VALUES (%s, %s)""", (article_id, id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
+class ArticleUpdateDeleteReffromHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('ref_from')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM reference
+            WHERE from_id=%s AND to_id=%s""", (id, article_id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
+
 class AuthSigninHandler(BaseHandler):
     def get(self):
         self.render("signin.html")
@@ -388,6 +568,16 @@ class Application(tornado.web.Application):
             (r"/search/", SearchHandler),
             (r'/article/', ArticleHandler),
             (r'/article/delete/', ArticleDeleteHandler),
+            (r'/article/update/', ArticleUpdateHandler),
+            (r'/article/update/save/', ArticleUpdateSaveHandler),
+            (r'/article/update/addauthor/', ArticleUpdateAddAuthorHandler),
+            (r'/article/update/deleteauthor/', ArticleUpdateDeleteAuthorHandler),
+            (r'/article/update/addkeyword/', ArticleUpdateAddKeywordHandler),
+            (r'/article/update/deletekeyword/', ArticleUpdateDeleteKeywordHandler),
+            (r'/article/update/addrefto/', ArticleUpdateAddReftoHandler),
+            (r'/article/update/deleterefto/', ArticleUpdateDeleteReftoHandler),
+            (r'/article/update/addreffrom/', ArticleUpdateAddReffromHandler),
+            (r'/article/update/deletereffrom/', ArticleUpdateDeleteReffromHandler),
             (r'/author/', AuthorHandler),
             (r'/author/delete/', AuthorDeleteHandler),
             (r'/author/update/', AuthorUpdateHandler),
