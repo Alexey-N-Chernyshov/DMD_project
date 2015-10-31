@@ -11,3 +11,5 @@ psql -U username -f 'infile' database_name
 2. execute query to add auth table
 src\sql\auth\create_auth.sql
 3. configure Settings.py - set passwords, usernames
+4. run src/webapp/webserver.py
+5. go to http://localhost:8000

@@ -197,7 +197,7 @@ if __name__ == '__main__':
                             print("Smth get wrong, but ok... ", exc)
                             conn.rollback()
 
-                        #insert article_author references
+                        #insert article_keyword references
                         try:
                             cursor.execute("SELECT id FROM keyword WHERE tag = %s LIMIT 1", (keyword, ))
                             row = cursor.fetchone()

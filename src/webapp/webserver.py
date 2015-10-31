@@ -69,6 +69,44 @@ class SearchResultHandler(BaseHandler):
         self.render('searchresult.html', articles=articles, id=id, title=title,
             author=author, venue=venue, year=year, offset=offset, keyword=keyword)
 
+class AuthorHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        id = self.get_argument('id')
+
+        cur = conn.cursor()
+        cur.execute("""SELECT id, name, institute FROM author WHERE id=%s;""", (id, ))
+        author = cur.fetchone()
+
+        cur.execute("""SELECT article_id, article.paper_title
+            FROM article_author JOIN article ON article_id=article.id
+            WHERE author_id=%s""",
+            (id,))
+        articles = cur.fetchall()
+        cur.close()
+
+        print(author[0])
+        print(author[1])
+        print(author[2])
+        print(articles)
+
+        self.render('author.html', id=author[0], name=author[1], institute=author[2], articles=articles)
+
+class AuthorDeleteHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM article_author WHERE author_id=%s""", (id, ))
+        conn.commit()
+
+        cur.execute("""DELETE FROM author WHERE id=%s""", (id, ))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/search/"))
+
 class ArticleHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -77,7 +115,7 @@ class ArticleHandler(BaseHandler):
         cur.execute("""SELECT * FROM article WHERE id=%s;""", (id, ))
         article = cur.fetchone()
 
-        cur.execute("""SELECT name FROM author, article_author
+        cur.execute("""SELECT author.id,name FROM author, article_author
                            WHERE author_id=author.id AND  article_id=%s""", (id, ))
         authors = cur.fetchall()
 
@@ -111,22 +149,89 @@ class AddArticleHandler(BaseHandler):
 
     def post(self):
         title = self.get_argument('title')
-        author = self.get_argument('author')
+        authors = self.get_argument('author').split(",")
         venue = self.get_argument('venue')
         year = self.get_argument('year')
-        keyword = self.get_argument('keyword')
-        ref_to = self.get_argument('ref_to').split(",")
-        ref_from = self.get_argument('ref_from').split(",")
+        keywords = self.get_argument('keyword').split(",")
+        ref_tos = self.get_argument('ref_to').split(",")
+        ref_froms = self.get_argument('ref_from').split(",")
 
-        print(title)
-        print(author)
-        print(venue)
-        print(year)
-        print(keyword)
-        print(ref_to)
-        print(ref_from)
+        cur = conn.cursor()
+        cur.execute("""SELECT id FROM article ORDER BY id DESC LIMIT 1""")
+        id = cur.fetchone()
+        if id:
+            id = id[0] + 1
+        else:
+            id = 0
 
-        self.render('search.html')
+        cur.execute("""INSERT INTO article(id, paper_title, year, venue)
+            VALUES (%s, %s, %s, %s);""", (id, title, year, venue))
+        conn.commit()
+
+        for author in authors:
+            cur.execute("""SELECT id from author WHERE name=%s""", (author.strip(),))
+            auth_id = cur.fetchone()
+            if not auth_id:
+                cur.execute("""INSERT INTO author(name, institute)
+                    VALUES (%s, %s)""", (author, "NULL"))
+                conn.commit()
+                cur.execute("""SELECT id from author WHERE name=%s""", (author,))
+                auth_id = cur.fetchone()
+
+            cur.execute("""INSERT INTO article_author(article_id, author_id)
+                VALUES (%s, %s)""", (id, auth_id))
+            conn.commit()
+
+        for keyword in keywords:
+            keyword = keyword.strip()
+            cur.execute("""SELECT id from keyword WHERE tag=%s""", (keyword,))
+            keyword_id = cur.fetchone()
+            if not keyword_id:
+                cur.execute("""INSERT INTO keyword(tag)
+                    VALUES (%s)""", (keyword, ))
+                conn.commit()
+                cur.execute("""SELECT id from keyword WHERE tag=%s""", (keyword,))
+                keyword_id = cur.fetchone()
+
+            cur.execute("""INSERT INTO article_keyword(article_id, keyword_id)
+                VALUES (%s, %s)""", (id, keyword_id))
+            conn.commit()
+
+        for ref_to in ref_tos:
+            cur.execute("""INSERT INTO reference(from_id, to_id)
+                VALUES (%s, %s)""", (id, int(ref_to)))
+            conn.commit()
+
+        for ref_from in ref_froms:
+            cur.execute("""INSERT INTO reference(from_id, to_id)
+                VALUES (%s, %s)""", (int(ref_from), id))
+            conn.commit()
+
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/article/?id=" + str(id)))
+
+class ArticleDeleteHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM article_author WHERE article_id=%s""", (id, ))
+        conn.commit()
+
+        cur.execute("""DELETE FROM article_keyword WHERE article_id=%s""", (id, ))
+        conn.commit()
+
+        cur.execute("""DELETE FROM reference WHERE from_id=%s OR to_id=%s""", (id, id))
+        conn.commit()
+
+        cur.execute("""DELETE FROM article WHERE id=%s""", (id, ))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/search/"))
+
 
 class AuthSigninHandler(BaseHandler):
     def get(self):
@@ -224,6 +329,9 @@ class Application(tornado.web.Application):
             (r"/auth/logout/", AuthLogoutHandler),
             (r"/search/", SearchHandler),
             (r'/article/', ArticleHandler),
+            (r'/article/delete/', ArticleDeleteHandler),
+            (r'/author/', AuthorHandler),
+            (r'/author/delete/', AuthorDeleteHandler),
             (r'/searchresult/', SearchResultHandler),
             (r'/addarticle/', AddArticleHandler),
         ]
