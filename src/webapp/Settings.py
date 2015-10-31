@@ -21,10 +21,10 @@ COOKIE_SECRET = 'L8LwECiNRxq2N0N2eGxx9MZlrpmuMEimlydNX/vt1LM='
 db_name = "dmd_project"
 db_username = "postgres"
 db_host = "localhost"
-db_password = "2qfksh4g"
+db_password = "71915"
 
 #database for authentication
 auth_db_name = "dmd_project"
 auth_db_username = "postgres"
 auth_db_host = "localhost"
-auth_db_password = "2qfksh4g"
+auth_db_password = "71915"

@@ -3,8 +3,27 @@
   <head>
     <title>Search result</title>
   </head>
+  <style>
+   #layer {
+    top: 20px; 
+	width: 350px;
+    background: #f0f0f0; /* Цвет фона */
+    padding: 7px; /* Поля вокруг текста */
+    border: solid 1px black; /* Параметры рамки */
+	display: inline-block; 
+   }
+   
+  </style>
+  </style>
   <body>
-    <h1>Enter search criterias.</h1>
+	<header>
+	<div id="layer">
+			<h1>Enter search criterias.</h1>
+			<a href="http://localhost:8000/search/">Search</a>
+			<a href="http://localhost:8000/addarticle/">Add Article</a>
+			<a href="http://localhost:8000/auth/logout/">Log Out</a>
+	</div>
+	</header>
     <form method="post" action="/searchresult/">
       <p>Article id<br><input type="number" name="id"></p>
       <p>Article title<br><input type="text" name="title"></p>
