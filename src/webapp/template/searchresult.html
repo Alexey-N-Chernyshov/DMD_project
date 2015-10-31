@@ -6,9 +6,9 @@
   <body>
     <h1>Search result</h1>
 
-    <h2>Authors</h2>
+    <h2>Articles</h2>
     {% for article in articles %}
-      <p><a href="/article/?id={{article[0]}}" >
+      <p><a href="/article/?id={{article[0]}}">
         id = {{article[0]}}, title = {{article[1]}}, venue = {{article[2]}}, year = {{article[3]}}
       </a></p>
     {% end %}
