@@ -1,0 +1,8 @@
+#layer {
+  top: 20px;
+  width: 350px;
+  background: #f0f0f0; /* Цвет фона */
+  padding: 7px; /* Поля вокруг текста */
+  border: solid 1px black; /* Параметры рамки */
+  display: inline-block;
+}
