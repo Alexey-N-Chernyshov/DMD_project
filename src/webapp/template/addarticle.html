@@ -1,9 +1,11 @@
-<!DOCTYPE html>
-<html>
-  <head>
+{% extends main.html %}
+
+{% block head %}
     <title>Add article</title>
-  </head>
-  <body>
+{% end %}
+
+{% block body %}
+	<center>
     <h1>Add article.</h1>
     <form method="post" action="/addarticle/">
       <p>Article title<br><input type="text" name="title"></p>
@@ -15,5 +17,5 @@
       <p>References from ("," is delimiter)<br><input type="text" name="ref_from"></p>
       <input type="submit">
     </form>
-  </body>
-</html>
+	</center>
+{% end %}

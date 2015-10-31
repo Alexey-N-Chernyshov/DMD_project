@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html>
-  <head>
+{% extends main.html %}
+
+{% block head %}
     <title>Article</title>
-  </head>
-  <body>
+{% end %}
+
+{% block body %}
     <form method="post" action="/article/delete/">
       <input type="number" name="id" value="{{id}}" hidden="True">
       <input type="submit" value="delete">
@@ -36,6 +37,4 @@
     {% for keyword in keywords %}
       <p>{{keyword[0]}}</p>
     {% end %}
-
-    </body>
-</html>
+{% end %}

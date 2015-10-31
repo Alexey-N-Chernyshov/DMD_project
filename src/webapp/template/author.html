@@ -23,3 +23,30 @@
 
     </body>
 </html>
+
+
+
+{% extends main.html %}
+
+{% block head %}
+    <title>Author</title>
+{% end %}
+
+{% block body %}
+    <form method="post" action="/author/delete/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="submit" value="delete">
+    </form>
+    <form method="get" action="/author/update/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="submit" value="update">
+    </form>
+    <h1>{{name}}</h1>
+    <p>id = {{id}}</p>
+    <p>institute = {{institute}}</p>
+
+    <h2>Articles:</h2>
+    {% for article in articles %}
+      <p><a href="/article/?id={{article[0]}}" >{{article[0]}}, {{article[1]}}</a></p>
+    {% end %}
+{% end %}

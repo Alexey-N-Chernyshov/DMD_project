@@ -1,4 +1,11 @@
-        <div id="main-container">
+{% extends main.html %}
+
+{% block head %}
+    <title>Log In</title>
+{% end %}
+
+{% block body %}
+    <div id="main-container">
             <div id="main">
                 <h1>
                     <img alt="scubabook logo" src="{{ static_url("img/logo.png") }}">
@@ -27,3 +34,4 @@
                 </div>
             </div>
         </div>
+{% end %}

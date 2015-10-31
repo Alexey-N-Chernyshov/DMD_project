@@ -1,8 +1,26 @@
 #layer {
   top: 20px;
-  width: 350px;
+  right:20px;
+  left:20px;
   background: #f0f0f0; /* Цвет фона */
   padding: 7px; /* Поля вокруг текста */
   border: solid 1px black; /* Параметры рамки */
-  display: inline-block;
+  
+}
+
+#bottomlayer {
+  bottom: 20px;
+  right:20px;
+  left:20px;
+  background: #f0f0f0; /* Цвет фона */
+  padding: 7px; /* Поля вокруг текста */
+  border: solid 1px black; /* Параметры рамки */
+  position: absolute;
+  text-align: right;
+}
+
+#logoutlayer {
+  top: 20px;
+  right:20px;
+  position: absolute;
 }

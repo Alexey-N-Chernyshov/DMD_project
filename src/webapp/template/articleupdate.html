@@ -1,10 +1,11 @@
-<!DOCTYPE html>
-<html>
-  <head>
+{% extends main.html %}
+
+{% block head %}
     <title>Article update</title>
-  </head>
-  <body>
-    <h1>id = {{id}}</h1>
+{% end %}
+
+{% block body %}
+  <h1>id = {{id}}</h1>
     <form method="post" action="/article/update/save/">
       <input type="number" name="id" value="{{id}}" hidden="True">
       <p>Title<br><input type="text" name="title" value="{{title}}"></p>
@@ -84,6 +85,4 @@
         </form>
       </p>
     {% end %}
-
-    </body>
-</html>
+{% end %}
