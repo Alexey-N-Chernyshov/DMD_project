@@ -85,11 +85,6 @@ class AuthorHandler(BaseHandler):
         articles = cur.fetchall()
         cur.close()
 
-        print(author[0])
-        print(author[1])
-        print(author[2])
-        print(articles)
-
         self.render('author.html', id=author[0], name=author[1], institute=author[2], articles=articles)
 
 class AuthorDeleteHandler(BaseHandler):
@@ -106,6 +101,68 @@ class AuthorDeleteHandler(BaseHandler):
         cur.close()
 
         self.redirect(self.get_argument("next", u"/search/"))
+
+class AuthorUpdateHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        id = self.get_argument('id')
+
+        cur = conn.cursor()
+        cur.execute("""SELECT id, name, institute FROM author WHERE id=%s;""", (id, ))
+        author = cur.fetchone()
+
+        cur.execute("""SELECT article_id, article.paper_title
+            FROM article_author JOIN article ON article_id=article.id
+            WHERE author_id=%s""",
+            (id,))
+        articles = cur.fetchall()
+        cur.close()
+
+        self.render('authorupdate.html', id=author[0], name=author[1], institute=author[2], articles=articles)
+
+class AuthorUpdateSaveHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        name = self.get_argument('name')
+        institute = self.get_argument('institute')
+
+        cur = conn.cursor()
+        cur.execute("""UPDATE author SET id=%s, name=%s, institute=%s
+            WHERE id=%s""", (id, name, institute, id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/author/?id=" + id))
+
+class AuthorUpdateAddArticleHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('article_id')
+
+        cur = conn.cursor()
+        cur.execute("""INSERT INTO article_author (author_id, article_id)
+            VALUES (%s, %s)""", (id, article_id))
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/author/update/?id=" + id))
+
+class AuthorUpdateDeleteArticleHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        id = self.get_argument('id')
+        article_id = self.get_argument('article_id')
+
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM article_author
+            WHERE author_id=%s AND article_id=%s""", (id, article_id))
+        print(cur.query)
+        conn.commit()
+        cur.close()
+
+        self.redirect(self.get_argument("next", u"/author/update/?id=" + id))
 
 class ArticleHandler(BaseHandler):
     @tornado.web.authenticated
@@ -198,14 +255,16 @@ class AddArticleHandler(BaseHandler):
             conn.commit()
 
         for ref_to in ref_tos:
-            cur.execute("""INSERT INTO reference(from_id, to_id)
-                VALUES (%s, %s)""", (id, int(ref_to)))
-            conn.commit()
+            if ref_to:
+                cur.execute("""INSERT INTO reference(from_id, to_id)
+                    VALUES (%s, %s)""", (id, int(ref_to)))
+                conn.commit()
 
         for ref_from in ref_froms:
-            cur.execute("""INSERT INTO reference(from_id, to_id)
-                VALUES (%s, %s)""", (int(ref_from), id))
-            conn.commit()
+            if ref_from:
+                cur.execute("""INSERT INTO reference(from_id, to_id)
+                    VALUES (%s, %s)""", (int(ref_from), id))
+                conn.commit()
 
         cur.close()
 
@@ -231,7 +290,6 @@ class ArticleDeleteHandler(BaseHandler):
         cur.close()
 
         self.redirect(self.get_argument("next", u"/search/"))
-
 
 class AuthSigninHandler(BaseHandler):
     def get(self):
@@ -332,6 +390,10 @@ class Application(tornado.web.Application):
             (r'/article/delete/', ArticleDeleteHandler),
             (r'/author/', AuthorHandler),
             (r'/author/delete/', AuthorDeleteHandler),
+            (r'/author/update/', AuthorUpdateHandler),
+            (r'/author/update/addarticle/', AuthorUpdateAddArticleHandler),
+            (r'/author/update/deletearticle/', AuthorUpdateDeleteArticleHandler),
+            (r'/author/update/save/', AuthorUpdateSaveHandler),
             (r'/searchresult/', SearchResultHandler),
             (r'/addarticle/', AddArticleHandler),
         ]

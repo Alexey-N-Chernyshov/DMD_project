@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Author</title>
+  </head>
+  <body>
+    <h1>id = {{id}}</h1>
+    <form method="post" action="/author/update/save/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Name<br><input type="text" name="name" value="{{name}}"></p>
+      <p>Institute<br><input type="text" name="institute" value="{{institute}}"></p>
+      <input type="submit" value="save">
+    </form>
+
+    <h2>Articles:</h2>
+    <form method="post" action="/author/update/addarticle/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Add articel id:<br><input type="number" name="article_id"></p>
+      <input type="submit" value="add">
+    </form>
+    <p>All articles:<br></p>
+    {% for article in articles %}
+      <p><a href="/article/?id={{article[0]}}" >{{article[0]}}, {{article[1]}}</a>
+        <form method="post" action="/author/update/deletearticle/">
+          <input type="number" name="id" value="{{id}}" hidden="True">
+          <input type="number" name="article_id" value="{{article[0]}}" hidden="True">
+          <input type="submit" value="delete">
+        </form>
+      </p>
+    {% end %}
+
+    </body>
+</html>
