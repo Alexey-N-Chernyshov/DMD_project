@@ -23,6 +23,12 @@
   top: 20px;
   right:20px;
   position: absolute;
+  vertical-align: center;
+}
+
+.floatleft{
+  display:inline;
+  float:left;
 }
 
 .search {
@@ -85,3 +91,9 @@
 .search a:hover {
   opacity: 1;
 }
+
+footer {
+  width: 100%;
+}
+
+
