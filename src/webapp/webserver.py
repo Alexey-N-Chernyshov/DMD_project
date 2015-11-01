@@ -52,7 +52,7 @@ class SearchResultHandler(BaseHandler):
         if id:
             query += ' AND article.id=' + id
         if title:
-            query += ' AND paper_title=' + title
+            query += """ AND paper_title='""" + title + """'"""
         if author:
             query += """ AND author.name='""" + author + """'"""
         if venue:
