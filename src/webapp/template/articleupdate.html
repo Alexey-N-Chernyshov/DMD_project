@@ -6,6 +6,7 @@
 
 {% block body %}
   <h1>id = {{id}}</h1>
+  <div class="articleupdate">
     <form method="post" action="/article/update/save/">
       <input type="number" name="id" value="{{id}}" hidden="True">
       <p>Title<br><input type="text" name="title" value="{{title}}"></p>
@@ -74,7 +75,7 @@
       <p>Add keyword:<br><input type="text" name="tag"></p>
       <input type="submit" value="add">
     </form>
-    <p>All kewords:<br></p>
+    <p>All keywords:<br></p>
     {% for keyword in keywords %}
       <p>
         {{keyword[0]}}
@@ -85,4 +86,5 @@
         </form>
       </p>
     {% end %}
+  </div>
 {% end %}
