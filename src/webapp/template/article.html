@@ -5,7 +5,7 @@
 {% end %}
 
 {% block body %}
-    <form method="post" action="/article/delete/">
+    <form method="post" action="/article/delete/" class="floatleft">
       <input type="number" name="id" value="{{id}}" hidden="True">
       <input type="submit" value="delete">
     </form>
