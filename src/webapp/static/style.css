@@ -13,16 +13,19 @@ body {
 }
 
 #bottomlayer {
-  bottom: 20px;
-  right:20px;
-  left:20px;
+  position: absolute;
+  bottom: 10px;
+  right:10px;
+  left:10px;
   background: #f0f0f0; /* Цвет фона */
   padding: 7px; /* Поля вокруг текста */
   border: solid 1px black; /* Параметры рамки */
-
   text-align: right;
 }
 
+  left: 0;
+  bottom: 0;
+  height: 80px;
 #username {
   height: 44px;
   font-size: 16px;
