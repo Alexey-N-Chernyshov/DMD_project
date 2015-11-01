@@ -7,6 +7,7 @@
 {% block body %}
 	<center>
     <h1>Add article.</h1>
+    <div class="addarticle">
     <form method="post" action="/addarticle/">
       <p>Article title<br><input type="text" name="title"></p>
       <p>Article author ("," is delimiter)<br><input type="text" name="author"></p>
@@ -17,5 +18,6 @@
       <p>References from ("," is delimiter)<br><input type="text" name="ref_from"></p>
       <input type="submit">
     </form>
+    </div>
 	</center>
 {% end %}
