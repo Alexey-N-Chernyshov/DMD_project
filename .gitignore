@@ -1,5 +1,6 @@
 ## ignore data folder
 /data/*
+/src/db/test/testData/*
 
 ## ignore python *.pyc
 *.pyc
