@@ -362,8 +362,7 @@ class BTree(object):
 
         return [self.LEAF(self, contents=node) for node in leaves], seps
 
-    def _build_bulkloaded_branches(self, xxx_todo_changeme):
-        (leaves, seps) = xxx_todo_changeme
+    def _build_bulkloaded_branches(self, (leaves, seps)):
         minimum = self.order // 2
         levels = [leaves]
 
@@ -426,7 +425,7 @@ class BPlusTree(BTree):
 
     def get(self, key, default=None):
         try:
-            return next(self._get(key))
+            return self._get(key).next()
         except StopIteration:
             return default
 
@@ -458,15 +457,15 @@ class BPlusTree(BTree):
             node = node.children[0]
 
         while node:
-            for pair in zip(node.contents, node.data):
+            for pair in itertools.izip(node.contents, node.data):
                 yield pair
             node = node.next
 
     def iterkeys(self):
-        return map(operator.itemgetter(0), iter(self.iteritems()))
+        return itertools.imap(operator.itemgetter(0), self.iteritems())
 
     def itervalues(self):
-        return map(operator.itemgetter(1), iter(self.iteritems()))
+        return itertools.imap(operator.itemgetter(1), self.iteritems())
 
     __iter__ = iterkeys
 
@@ -501,7 +500,7 @@ class BPlusTree(BTree):
                 data=[p[1] for p in pairs])
             for pairs in leaves]
 
-        for i in range(len(leaves) - 1):
+        for i in xrange(len(leaves) - 1):
             leaves[i].next = leaves[i + 1]
 
         return leaves, [s[0] for s in seps]
@@ -514,19 +513,19 @@ import unittest
 class BTreeTests(unittest.TestCase):
     def test_additions(self):
         bt = BTree(20)
-        l = list(range(2000))
+        l = range(2000)
         for i, item in enumerate(l):
             bt.insert(item)
             self.assertEqual(list(bt), l[:i + 1])
 
     def test_bulkloads(self):
-        bt = BTree.bulkload(list(range(2000)), 20)
-        self.assertEqual(list(bt), list(range(2000)))
+        bt = BTree.bulkload(range(2000), 20)
+        self.assertEqual(list(bt), range(2000))
 
     def test_removals(self):
         bt = BTree(20)
-        l = list(range(2000))
-        list(map(bt.insert, l))
+        l = range(2000)
+        map(bt.insert, l)
         rand = l[:]
         random.shuffle(rand)
         while l:
@@ -537,16 +536,16 @@ class BTreeTests(unittest.TestCase):
         self.assertEqual(list(bt), l)
 
     def test_insert_regression(self):
-        bt = BTree.bulkload(list(range(2000)), 50)
+        bt = BTree.bulkload(range(2000), 50)
 
-        for i in range(100000):
+        for i in xrange(100000):
             bt.insert(random.randrange(2000))
 
 
 class BPlusTreeTests(unittest.TestCase):
     def test_additions_sorted(self):
         bt = BPlusTree(20)
-        l = list(range(2000))
+        l = range(2000)
 
         for item in l:
             bt.insert(item, str(item))
@@ -558,7 +557,7 @@ class BPlusTreeTests(unittest.TestCase):
 
     def test_additions_random(self):
         bt = BPlusTree(20)
-        l = list(range(2000))
+        l = range(2000)
         random.shuffle(l)
 
         for item in l:
@@ -567,16 +566,16 @@ class BPlusTreeTests(unittest.TestCase):
         for item in l:
             self.assertEqual(str(item), bt[item])
 
-        self.assertEqual(list(range(2000)), list(bt))
+        self.assertEqual(range(2000), list(bt))
 
     def test_bulkload(self):
-        bt = BPlusTree.bulkload(list(zip(list(range(2000)), list(map(str, list(range(2000)))))), 20)
+        bt = BPlusTree.bulkload(zip(range(2000), map(str, range(2000))), 20)
 
-        self.assertEqual(list(bt), list(range(2000)))
+        self.assertEqual(list(bt), range(2000))
 
         self.assertEqual(
-                list(bt.items()),
-                list(zip(list(range(2000)), list(map(str, list(range(2000)))))))
+                list(bt.iteritems()),
+                zip(range(2000), map(str, range(2000))))
 
 
 if __name__ == '__main__':
