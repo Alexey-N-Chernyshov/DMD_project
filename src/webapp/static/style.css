@@ -9,7 +9,6 @@ body {
   background: #f0f0f0; /* Цвет фона */
   padding: 7px; /* Поля вокруг текста */
   border: solid 1px black; /* Параметры рамки */
-  
 }
 
 #bottomlayer {
@@ -23,6 +22,7 @@ body {
   padding: 7px; /* Поля вокруг текста */
   border: solid 1px black; /* Параметры рамки */
   text-align: right;
+  position: relative;
 }
 
   left: 0;
@@ -188,4 +188,6 @@ footer {
   width: 100%;
 }
 
+result{
 
+}
