@@ -4,6 +4,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
+import login
 
 import psycopg2
 import hashlib, binascii # for authentication
@@ -494,14 +495,7 @@ class AuthSigninHandler(BaseHandler):
 
         #get hash password from database
         try:
-            conn_auth = psycopg2.connect("dbname='" + Settings.auth_db_name +
-                "' user='" + Settings.auth_db_username + "' host='" +
-                Settings.auth_db_host +"' password='" + Settings.auth_db_password + "'")
-            cur_auth = conn_auth.cursor()
-            cur_auth.execute("""INSERT INTO auth (login, pass) VALUES (%s, %s);""", (username_hashed, password_hashed))
-            conn_auth.commit()
-            cur_auth.close()
-            conn_auth.close()
+            login.get_hash_signin(username_hashed, password_hashed)
         except:
             self.render("signin.html")
 
@@ -522,27 +516,9 @@ class AuthLoginHandler(BaseHandler):
         #get hash of name
         dk = hashlib.pbkdf2_hmac('sha256', bytearray(username, 'utf8'), b'salt', 100000)
         username_hashed = binascii.hexlify(dk).decode("ascii")
-
+		
         #get hash password from database
-        conn_auth = psycopg2.connect("dbname='" + Settings.auth_db_name +
-            "' user='" + Settings.auth_db_username + "' host='" +
-            Settings.auth_db_host +"' password='" + Settings.auth_db_password + "'")
-        cur_auth = conn_auth.cursor()
-        cur_auth.execute("""SELECT login, pass FROM auth WHERE login=%s;""", (str(username_hashed), ))
-        auth_res = cur_auth.fetchone()
-        if auth_res == None:
-            cur_auth.close()
-            conn_auth.close()
-            return False
-        password_hashed = auth_res[1]
-        cur_auth.close()
-        conn_auth.close()
-
-        #hash incoming pass and compare
-        dk = hashlib.pbkdf2_hmac('sha256', bytearray(password, 'utf8'), b'salt', 100000)
-        if password_hashed == binascii.hexlify(dk).decode("ascii"):
-            return True
-        return False
+        return login.get_hash_login(username_hashed, password)
 
     def post(self):
         username = self.get_argument("username", "")
