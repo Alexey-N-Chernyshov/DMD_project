@@ -13,14 +13,14 @@ body {
 }
 
 #bottomlayer {
-  bottom: 20px;
+  bottom: -10px;
   right:20px;
-  left:20px;
+  left:5px;
   background: #f0f0f0; /* Цвет фона */
   padding: 7px; /* Поля вокруг текста */
   border: solid 1px black; /* Параметры рамки */
-
   text-align: right;
+   position: relative;
 }
 
 #username {
@@ -181,6 +181,10 @@ body {
 
 footer {
   width: 100%;
+}
+
+result{
+	
 }
 
 
