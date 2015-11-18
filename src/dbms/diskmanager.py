@@ -5,10 +5,7 @@ class DiskManagerException(Exception):
     pass
 
 class DiskManager:
-    def __init__(self):
-        self.f = open(settings.filename, 'r+b')
-
-    def __init__(self, filename):
+    def __init__(self, filename=settings.filename):
         self.f = open(filename, 'r+b')
 
     def writePage(self, page): #pageNum, data):

@@ -18,7 +18,7 @@ class TestDiskManager(unittest.TestCase):
     def testReadEmpty(self):
         page = self.dm.readPage(42)
         self.assertEqual(page.id, 42)
-        self.assertFalse(page.data)
+        self.assertTrue(page.data)
 
     def testWriteRead(self):
         for i in range(0, 100):

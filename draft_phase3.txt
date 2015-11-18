@@ -8,3 +8,7 @@ https://www.python.org/dev/peps/pep-0008/
 python unittest
 http://www.itmaybeahack.com/book/oodesign-python-2.1/html/finish/python_testing.html
 https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertEqual
+
+
+We use unclustered file - there is no reason to arrange the data entries since it is too expencive to maintain order. 
+To order data we use indexes.

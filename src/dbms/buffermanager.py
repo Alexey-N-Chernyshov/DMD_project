@@ -1,33 +1,39 @@
 import time
 
+from dataentry import DataEntry
 from diskmanager import DiskManager
 import settings
 
 class BufferManager:
-    def __init__(self):
-        self.diskManager = DiskManager(settings.filename)
+    def __init__(self, filename=settings.filename):
+        self.diskManager = DiskManager(filename)
         self.buffer = {}
+        self.lastEmptyPage = 0
+        self.buffersize = settings.buffersize
 
-    # loads page in buffer
+    def __del__(self):
+        self.commit()
+        self.diskManager.closeFile()
+
+    # loads page in buffer if it is not loaded
     def loadPage(self, pageNum):
         page = self.buffer.get(pageNum)
         if page == None:
             page = self.diskManager.readPage(pageNum)
-            if len(self.buffer) < settings.buffersize:
-                self.buffer[page.id] = page
-            else:
+            if len(self.buffer) >= self.buffersize:
                 removedPage = self.buffer.pop(min(self.buffer,
                         key = lambda p : self.buffer.get(p).time))
                 if removedPage.changed:
                     self.diskManager.writePage(removedPage)
+            self.buffer[page.id] = page
         else:
             page.time = time.time()
 
-    def get(self, pageNum):
+    def getPage(self, pageNum):
         self.loadPage(pageNum)
         return self.buffer.get(pageNum)
 
-    def set(self, page):
+    def setPage(self, page):
         self.loadPage(page.id)
         page.changed = True
         page.time = time.time()
@@ -39,25 +45,21 @@ class BufferManager:
             if p.changed:
                 self.diskManager.writePage(p)
 
+    #reads data by entry
+    def readData(self, entry):
+        page = self.getPage(entry.page)
+        return page.get(entry.offset)
+
+    #writes data to proper page and returns it's entry
+    def writeData(self, data):
+        page = self.getPage(self.lastEmptyPage)
+        #empty space should be more then 30% of a pagesize (settings.pageFreeSpace)
+        while page.getFreeSpace() - (len(data) + 2) < settings.pagesize * settings.pageFreeSpace:
+            self.lastEmptyPage += 1
+            page = self.getPage(self.lastEmptyPage)
+
+        print('page is ' + str(self.lastEmptyPage))
+        return page.add(data)
+
 if __name__ == '__main__':
     pass
-    # b = BufferManager()
-    # p = b.get(1)
-    # print(str(p.id) + " " + str(p.time))
-    # p = b.get(1)
-    # print(str(p.id) + " " + str(p.time))
-    # p = b.get(0)
-    # print(str(p.id) + " " + str(p.time))
-    #
-    # for i in range(0, 100):
-    #     b.get(i)
-    #     b.get(1)
-    #
-    # for i in b.buffer.values():
-    #     print(str(i.id) + ' ' + str(i.time))
-    #
-    # p = b.get(250)
-    # p.data = b'data for 250 page'
-    # b.set(p)
-    # print(str(p.id) + " " + str(p.time))
-    # b.commit()
