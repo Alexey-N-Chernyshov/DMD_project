@@ -51,10 +51,6 @@ class Table:
             for values in column.values():
                 values -= indexesToDelete
 
-    #delete, than add
-    def update(self, colname, val, newdata):
-        pass
-
     #get from index, find, return
     #str colname, colData[1]
     def get(self, *colData):
