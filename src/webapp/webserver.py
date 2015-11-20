@@ -44,31 +44,8 @@ class SearchResultHandler(BaseHandler):
         order = self.get_argument('order', "by id def")
         print(order)
 
-        query = """SELECT article.id, paper_title, venue, year FROM
-            article LEFT OUTER JOIN article_author ON article.id = article_author.article_id
-            LEFT OUTER JOIN article_keyword ON article_keyword.article_id=article.id
-            LEFT OUTER JOIN keyword ON keyword_id=keyword.id
-            LEFT OUTER JOIN author ON author_id=author.id
-            WHERE TRUE"""
-        if id:
-            query += ' AND article.id=' + id
-        if title:
-            query += """ AND paper_title='""" + title + """'"""
-        if author:
-            query += """ AND author.name='""" + author + """'"""
-        if venue:
-            query += """ AND venue='""" + venue + """'"""
-        if year:
-            query += ' AND year=' + year
-        if keyword:
-           query += """ AND tag='""" + keyword + """'"""
-        if order == 'id':
-            query += ' ORDER BY article.id '
-        elif order == 'title':
-            query += ' ORDER BY article.paper_title '
-        elif order == 'year':
-            query += ' ORDER BY article.year '
-        query += 'OFFSET ' + str(offset) + ' LIMIT 20'
+        """TO DO
+		SELECT + JOINS here."""
 
         cur = conn.cursor()
         cur.execute(query)
@@ -84,13 +61,14 @@ class AuthorHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        cur.execute("""SELECT id, name, institute FROM author WHERE id=%s;""", (id, ))
+        """TO DO
+		SELECT id, name, institute FROM author WHERE id=%s;"""
         author = cur.fetchone()
 
-        cur.execute("""SELECT article_id, article.paper_title
-            FROM article_author JOIN article ON article_id=article.id
-            WHERE author_id=%s""",
-            (id,))
+        """TO DO
+		SELECT article_id, article.paper_title
+		FROM article_author JOIN article ON article_id=article.id
+		WHERE author_id=%s"""
         articles = cur.fetchall()
         cur.close()
 
@@ -102,10 +80,12 @@ class AuthorDeleteHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM article_author WHERE author_id=%s""", (id, ))
+        """TO DO
+		DELETE FROM article_author WHERE author_id=%s"""
         conn.commit()
 
-        cur.execute("""DELETE FROM author WHERE id=%s""", (id, ))
+        """TO DO
+		DELETE FROM author WHERE id=%s"""
         conn.commit()
         cur.close()
 
@@ -117,13 +97,14 @@ class AuthorUpdateHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        cur.execute("""SELECT id, name, institute FROM author WHERE id=%s;""", (id, ))
+        """TO DO
+		SELECT id, name, institute FROM author WHERE id=%s;"""
         author = cur.fetchone()
 
-        cur.execute("""SELECT article_id, article.paper_title
-            FROM article_author JOIN article ON article_id=article.id
-            WHERE author_id=%s""",
-            (id,))
+        """TO DO 
+		SELECT article_id, article.paper_title
+		FROM article_author JOIN article ON article_id=article.id
+		WHERE author_id=%s"""
         articles = cur.fetchall()
         cur.close()
 
@@ -137,8 +118,8 @@ class AuthorUpdateSaveHandler(BaseHandler):
         institute = self.get_argument('institute')
 
         cur = conn.cursor()
-        cur.execute("""UPDATE author SET id=%s, name=%s, institute=%s
-            WHERE id=%s""", (id, name, institute, id))
+        """TO DO 
+		UPDATE author SET id=%s, name=%s, institute=%s WHERE id=%s"""
         conn.commit()
         cur.close()
 
@@ -151,8 +132,8 @@ class AuthorUpdateAddArticleHandler(BaseHandler):
         article_id = self.get_argument('article_id')
 
         cur = conn.cursor()
-        cur.execute("""INSERT INTO article_author (author_id, article_id)
-            VALUES (%s, %s)""", (id, article_id))
+        """TO DO
+		INSERT INTO article_author (author_id, article_id) VALUES (%s, %s)"""
         conn.commit()
         cur.close()
 
@@ -165,8 +146,8 @@ class AuthorUpdateDeleteArticleHandler(BaseHandler):
         article_id = self.get_argument('article_id')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM article_author
-            WHERE author_id=%s AND article_id=%s""", (id, article_id))
+        """TO DO 
+		DELETE FROM article_author WHERE author_id=%s AND article_id=%s"""
         conn.commit()
         cur.close()
 
@@ -177,21 +158,24 @@ class ArticleHandler(BaseHandler):
     def get(self):
         id = self.get_argument('id')
         cur = conn.cursor()
-        cur.execute("""SELECT * FROM article WHERE id=%s;""", (id, ))
+        """TO DO
+		SELECT * FROM article WHERE id=%s;"""
         article = cur.fetchone()
 
-        cur.execute("""SELECT author.id,name FROM author, article_author
-                           WHERE author_id=author.id AND  article_id=%s""", (id, ))
+        """TO DO
+		SELECT author.id,name FROM author, article_author WHERE author_id=author.id AND  article_id=%s"""
         authors = cur.fetchall()
 
-        cur.execute("""SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s""", (id, ))
+        """TO DO
+		SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s"""
         tos = cur.fetchall()
 
-        cur.execute("""SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s""", (id, ))
+        """TO DO
+		SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s"""
         froms = cur.fetchall()
 
-        cur.execute("""SELECT tag FROM keyword, article_keyword
-                            WHERE article_id=%s AND keyword_id=keyword.id""", (id, ))
+        """TO DO
+		SELECT tag FROM keyword, article_keyword WHERE article_id=%s AND keyword_id=keyword.id"""
         keywords = cur.fetchall()
 
         cur.close()
@@ -222,56 +206,61 @@ class AddArticleHandler(BaseHandler):
         ref_froms = self.get_argument('ref_from').split(",")
 
         cur = conn.cursor()
-        cur.execute("""SELECT id FROM article ORDER BY id DESC LIMIT 1""")
+        """TO DO
+		SELECT id FROM article ORDER BY id DESC LIMIT 1"""
         id = cur.fetchone()
         if id:
             id = id[0] + 1
         else:
             id = 0
 
-        cur.execute("""INSERT INTO article(id, paper_title, year, venue)
-            VALUES (%s, %s, %s, %s);""", (id, title, year, venue))
+        """TO DO
+		INSERT INTO article(id, paper_title, year, venue) VALUES (%s, %s, %s, %s);"""
         conn.commit()
 
         for author in authors:
-            cur.execute("""SELECT id from author WHERE name=%s""", (author.strip(),))
+            """TO DO
+			SELECT id from author WHERE name=%s"""
             auth_id = cur.fetchone()
             if not auth_id:
-                cur.execute("""INSERT INTO author(name, institute)
-                    VALUES (%s, %s)""", (author, "NULL"))
+                """TO DO
+				INSERT INTO author(name, institute) VALUES (%s, %s)"""
                 conn.commit()
-                cur.execute("""SELECT id from author WHERE name=%s""", (author,))
+                """TO DO 
+				SELECT id from author WHERE name=%s"""
                 auth_id = cur.fetchone()
 
-            cur.execute("""INSERT INTO article_author(article_id, author_id)
-                VALUES (%s, %s)""", (id, auth_id))
+            """TO DO
+			INSERT INTO article_author(article_id, author_id) VALUES (%s, %s)"""
             conn.commit()
 
         for keyword in keywords:
             keyword = keyword.strip()
-            cur.execute("""SELECT id from keyword WHERE tag=%s""", (keyword,))
+            """TO DO
+			SELECT id from keyword WHERE tag=%s"""
             keyword_id = cur.fetchone()
             if not keyword_id:
-                cur.execute("""INSERT INTO keyword(tag)
-                    VALUES (%s)""", (keyword, ))
+                """TO DO
+				INSERT INTO keyword(tag) VALUES (%s)"""
                 conn.commit()
-                cur.execute("""SELECT id from keyword WHERE tag=%s""", (keyword,))
+                """TO DO
+				SELECT id from keyword WHERE tag=%s"""
                 keyword_id = cur.fetchone()
 
-            cur.execute("""INSERT INTO article_keyword(article_id, keyword_id)
-                VALUES (%s, %s)""", (id, keyword_id))
+            """TO DO
+			INSERT INTO article_keyword(article_id, keyword_id) VALUES (%s, %s)"""
             conn.commit()
 
         for ref_to in ref_tos:
             if ref_to:
-                cur.execute("""INSERT INTO reference(from_id, to_id)
-                    VALUES (%s, %s)""", (id, int(ref_to)))
+                """TO DO
+				INSERT INTO reference(from_id, to_id) VALUES (%s, %s)"""
                 conn.commit()
 
         for ref_from in ref_froms:
             if ref_from:
-                cur.execute("""INSERT INTO reference(from_id, to_id)
-                    VALUES (%s, %s)""", (int(ref_from), id))
+                """TO DO
+				INSERT INTO reference(from_id, to_id) VALUES (%s, %s)"""
                 conn.commit()
 
         cur.close()
@@ -284,16 +273,20 @@ class ArticleDeleteHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM article_author WHERE article_id=%s""", (id, ))
+        """TO DO
+		DELETE FROM article_author WHERE article_id=%s"""
         conn.commit()
 
-        cur.execute("""DELETE FROM article_keyword WHERE article_id=%s""", (id, ))
+        """TO DO
+		DELETE FROM article_keyword WHERE article_id=%s"""
         conn.commit()
 
-        cur.execute("""DELETE FROM reference WHERE from_id=%s OR to_id=%s""", (id, id))
+        """TO DO
+		DELETE FROM reference WHERE from_id=%s OR to_id=%s"""
         conn.commit()
 
-        cur.execute("""DELETE FROM article WHERE id=%s""", (id, ))
+        """TO DO
+		DELETE FROM article WHERE id=%s"""
         conn.commit()
         cur.close()
 
@@ -304,21 +297,24 @@ class ArticleUpdateHandler(BaseHandler):
     def get(self):
         id = self.get_argument('id')
         cur = conn.cursor()
-        cur.execute("""SELECT * FROM article WHERE id=%s;""", (id, ))
+        """TO DO
+		SELECT * FROM article WHERE id=%s;"""
         article = cur.fetchone()
 
-        cur.execute("""SELECT author.id,name FROM author, article_author
-                           WHERE author_id=author.id AND  article_id=%s""", (id, ))
+        """TO DO
+		SELECT author.id,name FROM author, article_author WHERE author_id=author.id AND  article_id=%s"""
         authors = cur.fetchall()
 
-        cur.execute("""SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s""", (id, ))
+        """TO DO
+		SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s"""
         tos = cur.fetchall()
 
-        cur.execute("""SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s""", (id, ))
+        """TO DO
+		SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s"""
         froms = cur.fetchall()
 
-        cur.execute("""SELECT tag FROM keyword, article_keyword
-                            WHERE article_id=%s AND keyword_id=keyword.id""", (id, ))
+        """TO DO
+		SELECT tag FROM keyword, article_keyword WHERE article_id=%s AND keyword_id=keyword.id"""
         keywords = cur.fetchall()
 
         cur.close()
@@ -335,8 +331,8 @@ class ArticleUpdateSaveHandler(BaseHandler):
         venue = self.get_argument('venue')
 
         cur = conn.cursor()
-        cur.execute("""UPDATE article SET id=%s, paper_title=%s, year=%s, venue=%s
-            WHERE id=%s""", (id, title, year, venue, id))
+        """TO DO
+		UPDATE article SET id=%s, paper_title=%s, year=%s, venue=%s WHERE id=%s"""
         conn.commit()
         cur.close()
 
@@ -349,18 +345,20 @@ class ArticleUpdateAddAuthorHandler(BaseHandler):
         name = self.get_argument('name')
 
         cur = conn.cursor()
-        cur.execute("""SELECT id FROM author WHERE name=%s""", (name, ))
+        """TO DO
+		SELECT id FROM author WHERE name=%s"""
         author_id = cur.fetchone()
         if not author_id:
-            cur.execute("""INSERT INTO author(name, institute) VALUES
-                (%s, %s)""", (name, "NULL"))
+            """TO DO
+			INSERT INTO author(name, institute) VALUES (%s, %s)"""
             conn.commit()
-            cur.execute("""SELECT author_id  author WHERE author.name=%s""", (name, ))
+			"""TO DO
+			SELECT author_id  author WHERE author.name=%s"""
             author_id = cur.fetchone()
 
         try:
-            cur.execute("""INSERT INTO article_author (author_id, article_id)
-                VALUES (%s, %s)""", (author_id[0], id))
+            """TO DO
+			INSERT INTO article_author (author_id, article_id) VALUES (%s, %s)"""
             conn.commit()
         except:
             conn.rollback()
@@ -375,8 +373,8 @@ class ArticleUpdateDeleteAuthorHandler(BaseHandler):
         author_id = self.get_argument('author_id')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM article_author
-            WHERE author_id=%s AND article_id=%s""", (author_id, id))
+        """TO DO
+		DELETE FROM article_author WHERE author_id=%s AND article_id=%s"""
         conn.commit()
         cur.close()
 
@@ -389,18 +387,20 @@ class ArticleUpdateAddKeywordHandler(BaseHandler):
         tag = self.get_argument('tag')
         if tag:
             cur = conn.cursor()
-            cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+            """TO DO
+			SELECT id FROM keyword WHERE tag=%s"""
             tag_id = cur.fetchone()
             if not tag_id:
-                cur.execute("""INSERT INTO keyword(tag) VALUES
-                    (%s)""", (tag, ))
+                """TO DO
+				INSERT INTO keyword(tag) VALUES (%s)"""
                 conn.commit()
-                cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+                """TO DO 
+				SELECT id FROM keyword WHERE tag=%s"""
                 tag_id = cur.fetchone()
 
             try:
-                cur.execute("""INSERT INTO article_keyword (article_id, keyword_id)
-                    VALUES (%s, %s)""", (id, tag_id[0]))
+                """TO DO
+				INSERT INTO article_keyword (article_id, keyword_id) VALUES (%s, %s)"""
                 conn.commit()
             except:
                 conn.rollback()
@@ -415,10 +415,11 @@ class ArticleUpdateDeleteKeywordHandler(BaseHandler):
         tag = self.get_argument('tag')
 
         cur = conn.cursor()
-        cur.execute("""SELECT id FROM keyword WHERE tag=%s""", (tag, ))
+        """TO DO
+		SELECT id FROM keywords WHERE tag=%s"""
         keyword_id = cur.fetchone()[0]
-        cur.execute("""DELETE FROM article_keyword
-            WHERE keyword_id=%s AND article_id=%s""", (keyword_id, id))
+        """TO DO
+		DELETE FROM article_keyword WHERE keyword_id=%s AND article_id=%s"""
         conn.commit()
         cur.close()
 
@@ -431,8 +432,8 @@ class ArticleUpdateAddReftoHandler(BaseHandler):
         article_id = self.get_argument('ref_to')
 
         cur = conn.cursor()
-        cur.execute("""INSERT INTO reference (from_id, to_id)
-            VALUES (%s, %s)""", (id, article_id))
+        """TO DO
+		INSERT entry INTO reference that is referencing from"""
         conn.commit()
         cur.close()
 
@@ -445,8 +446,8 @@ class ArticleUpdateDeleteReftoHandler(BaseHandler):
         article_id = self.get_argument('ref_to')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM reference
-            WHERE from_id=%s AND to_id=%s""", (id, article_id))
+        """TO DO
+		DELETE entry FROM reference that is referencing from"""
         conn.commit()
         cur.close()
 
@@ -459,8 +460,8 @@ class ArticleUpdateAddReffromHandler(BaseHandler):
         article_id = self.get_argument('ref_from')
 
         cur = conn.cursor()
-        cur.execute("""INSERT INTO reference (from_id, to_id)
-            VALUES (%s, %s)""", (article_id, id))
+        """TO DO
+		INSERT entry INTO reference that is referenced from"""
         conn.commit()
         cur.close()
 
@@ -473,8 +474,8 @@ class ArticleUpdateDeleteReffromHandler(BaseHandler):
         article_id = self.get_argument('ref_from')
 
         cur = conn.cursor()
-        cur.execute("""DELETE FROM reference
-            WHERE from_id=%s AND to_id=%s""", (id, article_id))
+        """TO DO
+		DELETE entry from reference that is referenced from"""
         conn.commit()
         cur.close()
 
