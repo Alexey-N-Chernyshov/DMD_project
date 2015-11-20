@@ -63,3 +63,45 @@ class TestTable(unittest.TestCase):
             self.t.get('id', '11')
         with self.assertRaises(TableException):
             self.t.get('name', 11)
+
+    def testDeleteSimple(self):
+        self.t.add(DataEntry(1, 11), ('id', 1), ('name', 'Alice'), ('age', 11),
+            ('hobbie', 'singing'))
+        self.t.add(DataEntry(2, 22), ('id', 22), ('name', 'Bob'), ('age', 22),
+            ('hobbie', 'fishing'))
+        self.t.add(DataEntry(3, 33), ('id', 333), ('name', 'Cidney'), ('age', 333),
+            ('hobbie', 'nope'))
+
+        self.t.delete('id', 22)
+
+        self.assertTrue(DataEntry(1, 11) in self.t.get('id', 1))
+        self.assertTrue(DataEntry(2, 22) not in self.t.get('id', 22))
+        self.assertTrue(DataEntry(3, 33) in self.t.get('id', 333))
+
+        self.assertTrue(DataEntry(1, 11) in self.t.get('name', 'Alice'))
+        self.assertTrue(DataEntry(2, 22) not in self.t.get('name', 'Bob'))
+        self.assertTrue(DataEntry(3, 33) in self.t.get('name', 'Cidney'))
+
+        self.assertTrue(DataEntry(1, 11) in self.t.get('age', 11))
+        self.assertTrue(DataEntry(2, 22) not in self.t.get('age', 22))
+        self.assertTrue(DataEntry(3, 33) in self.t.get('age', 333))
+
+    def testDeleteMultiple(self):
+        self.t.add(DataEntry(1, 11), ('id', 1), ('name', 'Alice'), ('age', 11),
+            ('hobbie', 'singing'))
+        self.t.add(DataEntry(2, 22), ('id', 22), ('name', 'Bob'), ('age', 22),
+            ('hobbie', 'fishing'))
+        self.t.add(DataEntry(3, 33), ('id', 333), ('name', 'Cidney'), ('age', 333),
+            ('hobbie', 'nope'))
+        self.t.add(DataEntry(4, 44), ('id', 4444), ('name', 'Cidney'), ('age', 44),
+            ('hobbie', 'nope'))
+        self.t.add(DataEntry(5, 55), ('id', 5555), ('name', 'Cidney'), ('age', 55),
+            ('hobbie', 'nope'))
+
+        self.t.delete('name', 'Cidney')
+
+        self.assertTrue(DataEntry(1, 11) in self.t.get('id', 1))
+        self.assertTrue(DataEntry(2, 22) in self.t.get('id', 22))
+        self.assertTrue(DataEntry(3, 33) not in self.t.get('id', 333))
+        self.assertTrue(DataEntry(4, 44) not in self.t.get('id', 4444))
+        self.assertTrue(DataEntry(5, 55) not in self.t.get('id', 5555))

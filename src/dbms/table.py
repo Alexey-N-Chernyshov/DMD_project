@@ -44,7 +44,10 @@ class Table:
 
     # delete from indecies and from disk
     def delete(self, colname, val):
-        pass
+        indexesToDelete = self.get(colname, val).copy()
+        for column in self.colIndexes.values():
+            for values in column.values():
+                values -= indexesToDelete
 
     #delete, than add
     def update(self, colname, val, newdata):
