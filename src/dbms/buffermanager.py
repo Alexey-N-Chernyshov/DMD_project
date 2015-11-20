@@ -1,19 +1,39 @@
 import time
+import pickle
+import struct
 
 from dataentry import DataEntry
 from diskmanager import DiskManager
+from page import *
 import settings
 
 class BufferManager:
     def __init__(self, filename=settings.filename):
         self.diskManager = DiskManager(filename)
         self.buffer = {}
-        self.lastEmptyPage = 0
+        self.lastEmptyPage = 1
         self.buffersize = settings.buffersize
 
     def __del__(self):
         self.commit()
         self.diskManager.closeFile()
+
+    #loads metadata from 0 page:
+    # - total pages
+    def loadMetaData(self):
+        page = self.diskManager.readPage(0)
+        self.lastEmptyPage = struct.unpack('Q', page.get(2))[0]
+        metaLen = struct.unpack('Q', page.get(12))[0]
+        self.diskManager.f.seek((self.lastEmptyPage + 1) * settings.pagesize)
+        return self.diskManager.f.read(metaLen)
+
+    def saveMetaData(self, data=b''):
+        page = Page(0)
+        page.add(struct.pack('Q', self.lastEmptyPage))
+        page.add(struct.pack('Q', len(data)))
+        self.diskManager.writePage(page)
+        self.diskManager.f.seek((self.lastEmptyPage + 1) * settings.pagesize)
+        self.diskManager.f.write(data)
 
     # loads page in buffer if it is not loaded
     def loadPage(self, pageNum):
@@ -58,7 +78,6 @@ class BufferManager:
             self.lastEmptyPage += 1
             page = self.getPage(self.lastEmptyPage)
 
-        print('page is ' + str(self.lastEmptyPage))
         return page.add(data)
 
 if __name__ == '__main__':

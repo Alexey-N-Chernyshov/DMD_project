@@ -1,6 +1,8 @@
 To run tests:
 cd src/dbms
 python -m unittest discover
+or
+python -m unittest test/test_name.py
 
 python styleguide pep8
 https://www.python.org/dev/peps/pep-0008/

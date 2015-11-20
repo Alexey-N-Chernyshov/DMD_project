@@ -16,8 +16,8 @@ class Page:
         self.changed = True
         self.id = id
         if data:
-            self.data = data
             self.offsetEmpty = struct.unpack('H', data[0:2])[0]
+            self.data = data[0:self.offsetEmpty]
         else:
             self.data = struct.pack('H', 2)
             self.offsetEmpty = 2
@@ -32,7 +32,7 @@ class Page:
     #returns DataEntry of new data block
     def add(self, data):
         if self.getFreeSpace() < len(data) + 2:
-            raise PageException("Page size is not enough")
+            raise PageException('Page ' + str(self.id) + ': size is not enough')
 
         offset = self.offsetEmpty
         self.data += struct.pack('H', len(data))

@@ -12,7 +12,6 @@ class TestBufferManager(unittest.TestCase):
 
     def tearDown(self):
         del self.bm
-        pass
 
     @unittest.skip
     def testWriteData(self):
@@ -26,6 +25,16 @@ class TestBufferManager(unittest.TestCase):
 
         print(self.bm.readData(DataEntry(11, 1152)))
         print(self.bm.readData(DataEntry(17, 1473)))
+
+    def testSaveLoadMetadata(self):
+        self.bm.lastEmptyPage = 42
+        mdstr = b'Quick red fox jump over lazy dog'
+        self.bm.saveMetaData(mdstr)
+        self.assertEqual(self.bm.lastEmptyPage, 42)
+        self.bm.lastEmptyPage = 54
+        md = self.bm.loadMetaData()
+        self.assertEqual(self.bm.lastEmptyPage, 42)
+        self.assertEqual(md, mdstr)
 
 if __name__ == '__main__':
     unittest.main()
