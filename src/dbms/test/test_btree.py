@@ -1,4 +1,5 @@
 import random
+import pickle
 import unittest
 
 from btree import *
@@ -34,8 +35,48 @@ class BTreeTests(unittest.TestCase):
         for i in range(100000):
             bt.insert(random.randrange(2000))
 
-
 class BPlusTreeTests(unittest.TestCase):
+    @unittest.skip
+    def testSerialization(self):
+        bt = BPlusTree(20)
+        bt.insert(1, 'one')
+        bt.insert(1, 'uno')
+        bt.insert(1, 'raz')
+
+        bt.insert(2, 'two')
+        bt.insert(2, 'duo')
+        bt.insert(2, 'dva')
+
+        bt.insert(3, 'three')
+        bt.insert(3, 'tres')
+        bt.insert(3, 'tri')
+
+        ser = pickle.dumps(bt)
+        bt2 = pickle.loads(ser)
+
+        for v in bt2.items():
+            print(v)
+
+    @unittest.skip
+    def testMultipleAddition(self):
+        bt = BPlusTree(20)
+        bt.insert(1, 'one')
+        bt.insert(1, 'uno')
+        bt.insert(1, 'raz')
+
+        bt.insert(2, 'two')
+        bt.insert(2, 'duo')
+        bt.insert(2, 'dva')
+
+        bt.insert(3, 'three')
+        bt.insert(3, 'tres')
+        bt.insert(3, 'tri')
+
+        bt.remove(2)
+
+        for v in bt.getlist(2):
+            print(v)
+
     def test_additions_sorted(self):
         bt = BPlusTree(20)
         l = list(range(2000))

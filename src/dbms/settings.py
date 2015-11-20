@@ -5,3 +5,6 @@ pageFreeSpace = 0.3
 
 #BufferManager settings
 buffersize = 10 # number of pages
+
+#B+Tree settings
+treeOrder = 20 #num elements in node
