@@ -1,3 +1,5 @@
+import pickle
+
 from btree import BPlusTree
 import settings
 
@@ -10,7 +12,7 @@ class TableException(Exception):
     pass
 
 class Table:
-    def __init__(self, name):
+    def __init__(self, name=''):
         self.name = name
         self.colTypes = {}
         self.colIndexes = {}
@@ -43,8 +45,8 @@ class Table:
                     self.colIndexes[d[0]][d[1]].add(entry)
 
     # delete from indecies and from disk
-    def delete(self, colname, val):
-        indexesToDelete = self.get(colname, val).copy()
+    def delete(self, *colData):
+        indexesToDelete = self.get(*colData).copy()
         for column in self.colIndexes.values():
             for values in column.values():
                 values -= indexesToDelete
@@ -54,30 +56,36 @@ class Table:
         pass
 
     #get from index, find, return
-    #str colname, val
-    def get(self, colname, val):
+    #str colname, colData[1]
+    def get(self, *colData):
         #check schema
-        if colname not in self.colIndexes:
-            raise TableException('Table.get: Wrong column name \'' + colname +
-                '\' or column is not searchable.')
-        if self.colTypes[colname] == DataType.INTEGER:
-            if not isinstance(val, int):
-                raise TableException('Table.get: Wrong column type \'' + colname +
-                    '\' INTEGER is expected.')
-        elif self.colTypes[colname] == DataType.STRING:
-            if not isinstance(val, str):
-                raise TableException('Table.get: Wrong column type \'' + colname +
-                    '\' STRING is expected.')
+        for col in colData:
+            if col[0] not in self.colIndexes:
+                raise TableException('Table.get: Wrong column name \''
+                    + col[0] + '\' or column is not searchable.')
+            if self.colTypes[col[0]] == DataType.INTEGER:
+                if not isinstance(col[1], int):
+                    raise TableException('Table.get: Wrong column type \''
+                        + col[0] + '\' INTEGER is expected.')
+            elif self.colTypes[col[0]] == DataType.STRING:
+                if not isinstance(col[1], str):
+                    raise TableException('Table.get: Wrong column type \''
+                        + col[0] + '\' STRING is expected.')
 
-        if val in self.colIndexes[colname]:
-            return self.colIndexes[colname][val]
+        res = set()
+        if colData[0][1] in self.colIndexes[colData[0][0]]:
+            res = self.colIndexes[colData[0][0]][colData[0][1]]
         else:
             return set()
+        for col in colData:
+            if col[1] in self.colIndexes[col[0]]:
+                res &= self.colIndexes[col[0]][col[1]]
+        return res
 
     #serialize
-    def toData(self):
-        pass
+    def toBytes(self):
+        return pickle.dumps(self)
 
     #deserialize
-    def fromData(self):
-        pass
+    def fromBytes(self, data):
+        return pickle.loads(data)
