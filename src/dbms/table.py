@@ -83,6 +83,8 @@ class Table:
         for col in colData:
             if col[1] in self.colIndexes[col[0]]:
                 res &= self.colIndexes[col[0]][col[1]]
+            else:
+                return set()
         return res
 
     #serialize
