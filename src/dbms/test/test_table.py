@@ -143,3 +143,14 @@ class TestTable(unittest.TestCase):
         print(newt.get(('id', 1)))
         print(newt.get(('name', 'Bob')))
         print(newt.get(('age', 333)))
+
+    @unittest.skip
+    def testGetEmpty(self):
+        self.t.add(DataEntry(1, 11), ('id', 1), ('name', 'Alice'), ('age', 11),
+            ('hobbie', 'singing'))
+        self.t.add(DataEntry(2, 22), ('id', 22), ('name', 'Bob'), ('age', 22),
+            ('hobbie', 'fishing'))
+        self.t.add(DataEntry(3, 33), ('id', 333), ('name', 'Cidney'), ('age', 333),
+            ('hobbie', 'nope'))
+
+        print(self.t.get())

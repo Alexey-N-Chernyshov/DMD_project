@@ -4,7 +4,7 @@ from queryprocessor import *
 
 class TestQueryProcessor(unittest.TestCase):
     def setUp(self):
-        self.qp = QuerryProcessor('test/testData/test_db.data')
+        self.qp = QueryProcessor('test/testData/test_db.data')
         self.qp.createTable('Person', ('id', DataType.INTEGER, True),
             ('name', DataType.STRING, True), ('age', DataType.INTEGER, True),
             ('hobbie', DataType.STRING, False))
@@ -16,7 +16,7 @@ class TestQueryProcessor(unittest.TestCase):
 
     def testCreateTableRaises(self):
         self.qp.createTable('table1')
-        with self.assertRaises(QuerryProcessorException):
+        with self.assertRaises(QueryProcessorException):
             self.qp.createTable('table1')
 
     def testCreateTable(self):
@@ -32,30 +32,37 @@ class TestQueryProcessor(unittest.TestCase):
         self.qp.loadTables()
 
     def testGetFromTable(self):
-        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice'))), 1)
+        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice')).data), 1)
 
         self.qp.addToTable('Person', ('id', 2), ('name', 'Alice'), ('age', 22),
-            ('hobbie', 'quake II and kokoshniki') )
+            ('hobbie', 'quake II and kokoshniki'))
 
-        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice'))), 2)
+        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice')).data), 2)
 
     def testDeleteFromTable(self):
-        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice'))), 1)
+        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice')).data), 1)
 
         self.qp.addToTable('Person', ('id', 2), ('name', 'Alice'), ('age', 22),
-            ('hobbie', 'quake II and kokoshniki') )
-        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice'))), 2)
+            ('hobbie', 'quake II and kokoshniki'))
+        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice')).data), 2)
 
         self.qp.deleteFromTable('Person', ('id', 2))
-        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice'))), 1)
+        self.assertEqual(len(self.qp.getFromTable('Person', ('name', 'Alice')).data), 1)
 
     def testAddToTable(self):
         self.qp.addToTable('Person', ('id', 2), ('name', 'Bob'), ('age', 22),
-            ('hobbie', 'quake II') )
+            ('hobbie', 'quake II'))
 
     def testWrongTable(self):
-        with self.assertRaises(QuerryProcessorException):
+        with self.assertRaises(QueryProcessorException):
             self.qp.addToTable('WrongName', ('id', 1))
 
-        with self.assertRaises(QuerryProcessorException):
+        with self.assertRaises(QueryProcessorException):
             self.qp.getFromTable('WrongName', ('id', 1))
+
+    @unittest.skip
+    def testQuery(self):
+        self.qp.addToTable('Person', ('id', 2), ('name', 'Alice'), ('age', 22),
+            ('hobbie', 'quake II and kokoshniki'))
+
+        print(self.qp.getFromTable('Person', ).data)

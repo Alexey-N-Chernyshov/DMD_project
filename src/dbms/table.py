@@ -16,9 +16,11 @@ class Table:
         self.name = name
         self.colTypes = {}
         self.colIndexes = {}
+        self.columns = []
 
     #add column (name, type, is index)
     def addColumn(self, name, type, isSearchable):
+        self.columns.append(name)
         self.colTypes[name] = type
         if isSearchable:
             self.colIndexes[name] = {}
@@ -54,6 +56,12 @@ class Table:
     #get from index, find, return
     #str colname, colData[1]
     def get(self, *colData):
+        res = set()
+        if len(colData) == 0:
+            for v in next(iter(self.colIndexes.values())).values():
+                res |= v
+            return res
+
         #check schema
         for col in colData:
             if col[0] not in self.colIndexes:
@@ -68,7 +76,6 @@ class Table:
                     raise TableException('Table.get: Wrong column type \''
                         + col[0] + '\' STRING is expected.')
 
-        res = set()
         if colData[0][1] in self.colIndexes[colData[0][0]]:
             res = self.colIndexes[colData[0][0]][colData[0][1]]
         else:
