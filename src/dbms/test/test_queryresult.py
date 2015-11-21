@@ -48,7 +48,7 @@ class TestQueryResult(unittest.TestCase):
         print(qres.project('beer', 'name', 'id').columns)
         print(qres.project('beer', 'name', 'id').data)
 
-    # @unittest.skip
+    @unittest.skip
     def testSort(self):
         qres1 = self.qp.getFromTable('Person')
         qres2 = self.qp.getFromTable('BeerLike')
