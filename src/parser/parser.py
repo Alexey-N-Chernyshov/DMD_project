@@ -228,7 +228,7 @@ if __name__ == '__main__':
     print('Indexes proceeded: ' + str(countIndexes))
     print('Articles proceeded: ' + str(countArticles))
     print('Reference count: ' + str(countReferences))
-    print('Abstarct proceeded: ' + str(countHasAbstract))
+    print('Abstract proceeded: ' + str(countHasAbstract))
     print('Max abstract length: ' + str(maxAbstractLen))
     print('Max venue length: ' + str(maxVenueLen))
     print('Max keywords in one article: ' + str(maxKeywordsArticle))
