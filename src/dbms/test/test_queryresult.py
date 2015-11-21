@@ -48,7 +48,7 @@ class TestQueryResult(unittest.TestCase):
         print(qres.project('beer', 'name', 'id').columns)
         print(qres.project('beer', 'name', 'id').data)
 
-    @unittest.skip
+    # @unittest.skip
     def testSort(self):
         qres1 = self.qp.getFromTable('Person')
         qres2 = self.qp.getFromTable('BeerLike')
@@ -58,8 +58,8 @@ class TestQueryResult(unittest.TestCase):
         with self.assertRaises(QueryResultException):
             qres.sort('WRONG_id')
 
-        print(qres.sort('id').columns)
-        print(qres.sort('id').data)
+        print(qres.sort('id', reverse=True).columns)
+        print(qres.sort('id', reverse=True).data)
 
         print(qres.sort('age').columns)
         print(qres.sort('age').data)
@@ -100,6 +100,19 @@ class TestQueryResult(unittest.TestCase):
         print(qres.data)
 
         qres = qres.limit(1, 3)
-        
+
         print(qres.columns)
         print(qres.data)
+
+    @unittest.skip
+    def testIter(self):
+        self.qp.addToTable('Person', ('id', 2), ('name', 'Charlie'), ('age', 444),
+            ('hobbie', 'none'))
+
+        qres1 = self.qp.getFromTable('Person')
+        qres2 = self.qp.getFromTable('BeerLike')
+
+        qres = qres1.join(qres2, 'id', 'id_pers')
+
+        for q in qres:
+            print(q)

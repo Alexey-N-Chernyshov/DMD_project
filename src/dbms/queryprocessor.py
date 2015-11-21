@@ -41,12 +41,12 @@ class QueryResult:
 
         return QueryResult(columns, res)
 
-    def sort(self, column):
+    def sort(self, column, reverse=False):
         if column not in self.columns:
             raise QueryResultException('Wrong sort field \'' + column + '\'')
 
         indCol = self.columns.index(column)
-        return QueryResult(self.columns, sorted(self.data, key=lambda row : row[indCol]))
+        return QueryResult(self.columns, sorted(self.data, key=lambda row : row[indCol], reverse=reverse))
 
     #function = tuple (resColName, function, (*colnames))
     def groupBy(self, *columns):
@@ -67,6 +67,12 @@ class QueryResult:
 
     def limit(self, fromInd, toInd):
         return QueryResult(self.columns, self.data[fromInd:toInd])
+
+    def __iter__(self):
+        return self.data.__iter__()
+
+    def __next__(self):
+        return self.data.__next__()
 
 
 class QueryProcessorException(Exception):
