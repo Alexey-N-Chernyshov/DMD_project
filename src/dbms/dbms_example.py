@@ -32,25 +32,11 @@ if __name__ == '__main__':
 
     qp = QueryProcessor(filename)
     qp.loadTables()
-
-    print('loading took ' + str(time.time() - t))
-
-    id = 25
-    article_id = 6
-    qr_res = qp.getFromTable('article_author', ('author_id', id), ('article_id', article_id))
-    qr_res = qr_res.sort('author_id')
-    qr_res = qr_res.sort('article_id')
-    printQueryResult(qr_res)
-
-    qp.deleteFromTable('article_author', ('author_id', id), ('article_id', article_id))
-
-    print("start query")
-    qr_article = qp.getFromTable('article_author', )
-    qr_res = qr_article.limit(0, 120)
-    qr_res = qr_res.sort('author_id')
-	
-    qr_res = qr_res.sort('article_id')
-	
+    qr_article_author = qp.getFromTable('article_author')
+    qr_author = qp.getFromTable('author')
+    qr_res = qr_author.join(qr_article_author, 'id', 'author_id')
+    qr_res = qr_res.project('id', 'name')
+    qr_res = qr_res.sort('id')
 
     # cur.execute("""DELETE FROM reference
     #     WHERE from_id=%s AND to_id=%s""", (id, article_id))
