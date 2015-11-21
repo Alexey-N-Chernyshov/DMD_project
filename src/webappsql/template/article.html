@@ -1,0 +1,40 @@
+{% extends main.html %}
+
+{% block head %}
+    <title>Article</title>
+{% end %}
+
+{% block body %}
+    <form method="post" action="/article/delete/" class="floatleft">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="submit" value="delete">
+    </form>
+    <form method="get" action="/article/update/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <input type="submit" value="update">
+    </form>
+    <h1>{{title}}</h1>
+    <p>id = {{id}}</p>
+    <p>year = {{year}}</p>
+    <p>venue = {{venue}}</p>
+
+    <h2>Authors</h2>
+    {% for author in authors %}
+      <p><a href="/author/?id={{author[0]}}" >{{author[1]}}</a></p>
+    {% end %}
+
+    <h2>References to:</h2>
+    {% for to_id in tos %}
+      <p><a href="/article/?id={{to_id[0]}}" >{{to_id[0]}}, {{to_id[1]}}</a></p>
+    {% end %}
+
+    <h2>References from:</h2>
+    {% for from_id in froms %}
+      <p><a href="/article/?id={{from_id[0]}}" >{{from_id[0]}}, {{from_id[1]}}</a></p>
+    {% end %}
+
+    <h2>Keywords:</h2>
+    {% for keyword in keywords %}
+      <p>{{keyword[0]}}</p>
+    {% end %}
+{% end %}

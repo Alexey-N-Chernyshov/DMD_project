@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- saved from url=(0036)http://localhost:8000/author/?id=206 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="http://localhost:8000/static/style.css?v=2b87b2d23b8d27f184a78aea1c512d01">
+
+<title>Author</title>
+
+</head>
+<body>
+<header>
+<div id="layer">
+<h1>DMD project Phase#2.</h1>
+<a href="http://localhost:8000/search/">Search</a>
+<a href="http://localhost:8000/addarticle/">Add Article</a>
+<div id="logoutlayer">
+<a href="http://localhost:8000/auth/logout/">Sign Out</a>
+</div>
+</div>
+</header>
+
+<form method="post" action="http://localhost:8000/author/delete/">
+<input type="number" name="id" value="206" hidden="True">
+<input type="submit" value="delete" class="floatleft">
+</form>
+<form method="get" action="http://localhost:8000/author/update/">
+<input type="number" name="id" value="206" hidden="True">
+<input type="submit" value="update" class="floatleft">
+</form>
+<h1>Pang-Ning Tan</h1>
+<p>id = 206</p>
+<p>institute = NULL</p>
+<h2>Articles:</h2>
+
+<p><a href="http://localhost:8000/article/?id=103">103, Introduction to Data Mining</a></p>
+
+<p><a href="http://localhost:8000/article/?id=399152">399152, Maximum Margin Active Learning for Sequence Labeling with Different Length.</a></p>
+
+<p><a href="http://localhost:8000/article/?id=1312382">1312382, History-Based Email Prioritization.</a></p>
+
+
+<footer>
+<div id="bottomlayer">
+Created by Chernyshov Alexey, Kravchenko Vladislav and Magomedov Murad. 2015 Innopolis University
+</div>
+</footer>
+
+
+</body></html>

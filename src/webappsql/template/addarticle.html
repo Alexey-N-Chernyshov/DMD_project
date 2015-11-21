@@ -1,0 +1,24 @@
+{% extends main.html %}
+
+{% block head %}
+    <title>Add article</title>
+{% end %}
+
+{% block body %}
+	<center>
+    <div class="addarticle">
+    <h1>Add article.</h1>
+    
+    <form method="post" action="/addarticle/">
+      <p>Article title<br><input type="text" name="title"></p>
+      <p>Article author ("," is delimiter)<br><input type="text" name="author"></p>
+      <p>Article venue<br><input type="text" name="venue"></p>
+      <p>Article year<br><input type="number" name="year"></p>
+      <p>Keyword ("," is delimiter)<br><input type="text" name="keyword"></p>
+      <p>References to ("," is delimiter)<br><input type="text" name="ref_to"></p>
+      <p>References from ("," is delimiter)<br><input type="text" name="ref_from"></p>
+      <input type="submit">
+    </form>
+    </div>
+	</center>
+{% end %}

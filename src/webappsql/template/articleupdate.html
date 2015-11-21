@@ -1,0 +1,90 @@
+{% extends main.html %}
+
+{% block head %}
+    <title>Article update</title>
+{% end %}
+
+{% block body %}
+  <h1>id = {{id}}</h1>
+  <div class="articleupdate">
+    <form method="post" action="/article/update/save/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Title<br><input type="text" name="title" value="{{title}}"></p>
+      <p>Year<br><input type="number" name="year" value="{{year}}"></p>
+      <p>Venue<br><input type="text" name="venue" value="{{venue}}"></p>
+      <input type="submit" value="save">
+    </form>
+
+    <h2>Authors</h2>
+    <form method="post" action="/article/update/addauthor/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Add author:<br><input type="text" name="name"></p>
+      <input type="submit" value="add">
+    </form>
+    <p>All authors:<br></p>
+    {% for author in authors %}
+      <p>
+        <a href="/author/?id={{author[0]}}" >{{author[1]}}</a>
+        <form method="post" action="/article/update/deleteauthor/">
+          <input type="number" name="id" value="{{id}}" hidden="True">
+          <input type="number" name="author_id" value="{{author[0]}}" hidden="True">
+          <input type="submit" value="delete">
+        </form>
+      </p>
+    {% end %}
+
+    <h2>References to:</h2>
+    <form method="post" action="/article/update/addrefto/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Add ref to by id:<br><input type="number" name="ref_to"></p>
+      <input type="submit" value="add">
+    </form>
+    <p>All references to:<br></p>
+    {% for to_id in tos %}
+      <p>
+        <a href="/article/?id={{to_id[0]}}" >{{to_id[0]}}, {{to_id[1]}}</a>
+        <form method="post" action="/article/update/deleterefto/">
+          <input type="number" name="id" value="{{id}}" hidden="True">
+          <input type="number" name="ref_to" value="{{to_id[0]}}" hidden="True">
+          <input type="submit" value="delete">
+        </form>
+      </p>
+    {% end %}
+
+    <h2>References from:</h2>
+    <form method="post" action="/article/update/addreffrom/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Add ref from by id:<br><input type="number" name="ref_from"></p>
+      <input type="submit" value="add">
+    </form>
+    <p>All references from:<br></p>
+    {% for from_id in froms %}
+      <p>
+        <a href="/article/?id={{from_id[0]}}" >{{from_id[0]}}, {{from_id[1]}}</a>
+        <form method="post" action="/article/update/deletereffrom/">
+          <input type="number" name="id" value="{{id}}" hidden="True">
+          <input type="number" name="ref_from" value="{{from_id[0]}}" hidden="True">
+          <input type="submit" value="delete">
+        </form>
+      </p>
+    {% end %}
+
+    <h2>Keywords:</h2>
+    <form method="post" action="/article/update/addkeyword/">
+      <input type="number" name="id" value="{{id}}" hidden="True">
+      <p>Add keyword:<br><input type="text" name="tag"></p>
+      <input type="submit" value="add">
+    </form>
+    <p>All keywords:<br></p>
+    {% for keyword in keywords %}
+      <p>
+        {{keyword[0]}}
+        <form method="post" action="/article/update/deletekeyword/">
+          <input type="number" name="id" value="{{id}}" hidden="True">
+          <input type="text" name="tag" value="{{keyword[0]}}" hidden="True">
+          <input type="submit" value="delete">
+        </form>
+      </p>
+    {% end %}
+  </div>
+{% end %}

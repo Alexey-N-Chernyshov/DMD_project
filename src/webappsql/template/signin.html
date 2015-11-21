@@ -1,0 +1,31 @@
+{% extends main.html %}
+
+{% block head %}
+    <title>Sign In</title>
+{% end %}
+
+{% block body %}
+     <div id="main-container">
+            <div id="main">
+                <h1>
+                    <img alt="scubabook logo" src="{{ static_url("img/logo.png") }}">
+                </h1>
+                <div id="signin-form">
+                    <form action="/auth/signin/" method="post" id="signin_form">
+                        <fieldset>
+                            <label for="username">Username</label>
+                            <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
+                        
+                            <label for="password">Password</label>
+                            <input class="text-input" id="password" name="password" tabindex="2" type="password" value="">
+                        </fieldset>
+
+                        <div id="form_btn">
+                            <input id="signin-btn" class="btn btn-blue" type="submit" value="Sign In" tabindex="3">
+                            <!-- <a href="/sb/"><input id="inscription-btn" class="btn btn-red" value="Inscription" tabindex="3"></a> -->
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+{% end %}
