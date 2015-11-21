@@ -27,7 +27,13 @@ def printQueryResult(qr):
 if __name__ == '__main__':
     qp = QueryProcessor(filename)
     qp.loadTables()
-
+    
+    qr_res = qp.getFromTable('author', ('name', author.strip()))
+    qr_res = qr_res.project('id')
+    qr_res = qr_res.sort('id')
+    printQueryResult(qr_res)
+	
+    """
     qr_article = qp.getFromTable('article', )
     qr_author = qp.getFromTable('author', )
     qr_article_author = qp.getFromTable('article_author', )
@@ -37,7 +43,10 @@ if __name__ == '__main__':
 
     qr_res = qr_res.project('article_id', 'paper_title', 'year', 'name')
 
+    qr_res = qr_res.sort('name')
     qr_res = qr_res.sort('article_id')
+	
 
     printQueryResult(qr_res)
+	"""
     # printTables(qp, 'author')
