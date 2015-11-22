@@ -20,7 +20,7 @@ define("port", default=8000, help="run on the given port", type=int)
 
 conn = psycopg2.connect("dbname='" + Settings.db_name + "' user='"
     + Settings.db_username + "' host='" + Settings.db_host +"' password='" + Settings.db_password + "'")
-    
+
 dbfilename = '../dbms/test/testData/test_final_db.data' # default filename
 qp = QueryProcessor(dbfilename)
 qp.loadTables()
@@ -113,9 +113,9 @@ class AuthorHandler(BaseHandler):
         qr_res = qp.getFromTable('author', ('id', int(id)))
         qr_res = qr_res.project('id', 'name', 'institute')
         qr_res = qr_res.sort('id')
-        author = qr_res[0]
+        author = qr_res
 
-        qr_article_author = qp.getFromTable('article_author', ('author_id', int(author_id)))
+        qr_article_author = qp.getFromTable('article_author', ('author_id', int(id)))
         qr_article = qp.getFromTable('article')
         qr_res = qr_article_author.join(qr_article, 'article_id', 'id')
         qr_res = qr_res.project('article_id', 'paper_title')
@@ -123,7 +123,7 @@ class AuthorHandler(BaseHandler):
         articles = qr_res
         cur.close()
 
-        self.render('author.html', id=author[0], name=author[1], institute=author[2], articles=articles)
+        self.render('author.html', id=author.data[0][0], name=author.data[0][1], institute=author.data[0][2], articles=articles)
 
 class AuthorDeleteHandler(BaseHandler):
     @tornado.web.authenticated
@@ -205,6 +205,7 @@ class ArticleHandler(BaseHandler):
         qr_res = qr_author.join(qr_article_author, 'id', 'article_id')
         qr_res = qr_res.project('id', 'name')
         qr_res = qr_res.sort('id')
+        qr_res = qr_res.groupBy('id', 'name')
         authors = qr_res
 
         qr_reference = qp.getFromTable('reference', ('from_id', int(id)))
@@ -214,24 +215,22 @@ class ArticleHandler(BaseHandler):
         qr_res = qr_res.sort('to_id')
         tos = qr_res
 
-        qr_reference = qp.getFromTable('reference', ('from_id', int(id)))
+        qr_reference = qp.getFromTable('reference', ('to_id', int(id)))
         qr_article = qp.getFromTable('article')
-        qr_res = qr_reference.join(qr_article, 'to_id', 'id')
+        qr_res = qr_reference.join(qr_article, 'from_id', 'id')
         qr_res = qr_res.project('from_id', 'paper_title')
         qr_res = qr_res.sort('from_id')
         froms = qr_res
 
         qr_keyword = qp.getFromTable('keyword')
-        print(qr_res.columns)
-        qr_res = qr_keyword.join(qr_res, 'id', 'from_id')
+        qr_article_keyword = qp.getFromTable('article_keyword', ('article_id', int(id)))
+        qr_res = qr_article_keyword.join(qr_keyword, 'keyword_id', 'id')
         qr_res = qr_res.project('tag')
         qr_res = qr_res.sort('tag')
         keywords = qr_res
 
-        cur.close()
-
-        self.render('article.html', id=article[0], title=article[1], year=article[2],
-            venue=article[3], authors=authors, tos=tos, froms=froms, keywords=keywords)
+        self.render('article.html', id=article.data[0][0], title=article.data[0][1], year=article.data[0][2],
+            venue=article.data[0][3], authors=authors, tos=tos, froms=froms, keywords=keywords)
 
     def write_error(self, status_code, **kwargs):
         self.write("You caused a %d error." % status_code)
