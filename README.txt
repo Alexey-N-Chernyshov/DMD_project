@@ -15,7 +15,7 @@ Instead install it from http://www.stickpeople.com/projects/python/win-psycopg/
 For linux users everything is fine.
 
 =============================================================
-HOW TO IMPORT SQL DB:
+(PHASE 2) HOW TO IMPORT SQL DB:
 1. import dump (available at gdrive https://drive.google.com/file/d/0B7tof8A3zkr3X0xKVEdydXhGeHM/view?usp=sharing)
 Command available both in Windows and Linux
 psql -U username -f 'infile' database_name
@@ -30,7 +30,7 @@ src\sql\auth\create_auth.sql
 5. go to the http://localhost:8000
 
 =============================================================
-HOW TO IMPORT TO OUR DBMS FROM SQL DATABASE:
+(PHASE 3) HOW TO IMPORT TO OUR DBMS FROM SQL DATABASE:
 1. sql database to import must exists.
 
 2. run src/dbms/psqlloader.py to create datafile for dbms and import data from Postgres
