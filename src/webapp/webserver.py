@@ -19,6 +19,10 @@ define("port", default=8000, help="run on the given port", type=int)
 conn = psycopg2.connect("dbname='" + Settings.db_name + "' user='"
     + Settings.db_username + "' host='" + Settings.db_host +"' password='" + Settings.db_password + "'")
 
+dbfilename = 'test/testData/test_final_db.data' # default filename
+qp = QueryProcessor(dbfilename)
+qp.loadTables()
+
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("user")
@@ -102,7 +106,7 @@ class AuthorUpdateHandler(BaseHandler):
 		SELECT id, name, institute FROM author WHERE id=%s;"""
         author = cur.fetchone()
 
-        """TO DO 
+        """TO DO
 		SELECT article_id, article.paper_title
 		FROM article_author JOIN article ON article_id=article.id
 		WHERE author_id=%s"""
@@ -118,11 +122,8 @@ class AuthorUpdateSaveHandler(BaseHandler):
         name = self.get_argument('name')
         institute = self.get_argument('institute')
 
-        cur = conn.cursor()
-        """TO DO 
-		UPDATE author SET id=%s, name=%s, institute=%s WHERE id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('author', ('id', id))
+		qp.addToTable('author', ('id', id), ('name', name), ('institute', institute))
 
         self.redirect(self.get_argument("next", u"/author/?id=" + id))
 
@@ -132,11 +133,7 @@ class AuthorUpdateAddArticleHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('article_id')
 
-        cur = conn.cursor()
-        """TO DO
-		INSERT INTO article_author (author_id, article_id) VALUES (%s, %s)"""
-        conn.commit()
-        cur.close()
+        qp.addToTable('article_author', ('id', id), ('article_id', article_id))
 
         self.redirect(self.get_argument("next", u"/author/update/?id=" + id))
 
@@ -146,11 +143,7 @@ class AuthorUpdateDeleteArticleHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('article_id')
 
-        cur = conn.cursor()
-        """TO DO 
-		DELETE FROM article_author WHERE author_id=%s AND article_id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('author', ('id', id), ('article_id', article_id))
 
         self.redirect(self.get_argument("next", u"/author/update/?id=" + id))
 
@@ -158,26 +151,35 @@ class ArticleHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         id = self.get_argument('id')
-        cur = conn.cursor()
-        """TO DO
-		SELECT * FROM article WHERE id=%s;"""
-        article = cur.fetchone()
+        qr_article = qp.getFromTable('article',('id', id))
+        article = qr_article[0][0]
 
-        """TO DO
-		SELECT author.id,name FROM author, article_author WHERE author_id=author.id AND  article_id=%s"""
-        authors = cur.fetchall()
+        qr_article_author = qp.getFromTable('article_author', ('article_id', article_id))
+		qr_author = qp.getFromTable('author')
+		qr_res = qr_author.join(qr_article_author, 'id', 'article_id')
+		qr_res = qr_res.project('id', 'name')
+		qr_res = qr_res.sort('id')
+        authors = qr_res
 
-        """TO DO
-		SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s"""
-        tos = cur.fetchall()
+        qr_reference = qp.getFromTable('reference', ('from_id', id))
+		qr_article = qp.getFromTable('article')
+		qr_res = qr_reference.join(qr_article, 'to_id', 'id')
+		qr_res = qr_res.project('to_id', 'paper_title')
+		qr_res = qr_res.sort('to_id')
+        tos = qr_res
 
-        """TO DO
-		SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s"""
-        froms = cur.fetchall()
+        qr_reference = qp.getFromTable('reference', ('from_id', id))
+		qr_article = qp.getFromTable('article')
+		qr_res = qr_reference.join(qr_article, 'to_id', 'id')
+		qr_res = qr_res.project('from_id', 'paper_title')
+		qr_res = qr_res.sort('from_id')
+        froms = qr_res
 
-        """TO DO
-		SELECT tag FROM keyword, article_keyword WHERE article_id=%s AND keyword_id=keyword.id"""
-        keywords = cur.fetchall()
+		qr_keyword = qp.getFromTable('keyword')
+		qr_res = qr_keyword.join(qr_article_keyword, 'id', 'keyword_id')
+		qr_res = qr_res.project('tag')
+		qr_res = qr_res.sort('tag')
+        keywords = qr_res
 
         cur.close()
 
@@ -206,65 +208,56 @@ class AddArticleHandler(BaseHandler):
         ref_tos = self.get_argument('ref_to').split(",")
         ref_froms = self.get_argument('ref_from').split(",")
 
-        cur = conn.cursor()
-        """TO DO
-		SELECT id FROM article ORDER BY id DESC LIMIT 1"""
-        id = cur.fetchone()
+        qr_res = qp.getFromTable('article')
+		qr_res = qr_res.project('id')
+		qr_res = qr_res.sort('id', reverse=True)
+		qr_res = qr_res.limit(0, 1)
+        id = qr_res[0][0]
         if id:
             id = id[0] + 1
         else:
             id = 0
 
-        """TO DO
-		INSERT INTO article(id, paper_title, year, venue) VALUES (%s, %s, %s, %s);"""
-        conn.commit()
+        qp.addToTable('article', ('id', id), ('paper_title', title),('year', year) ,('venue', venue))
 
         for author in authors:
-            """TO DO
-			SELECT id from author WHERE name=%s"""
-            auth_id = cur.fetchone()
+            qr_res = qp.getFromTable('author', ('name', author.strip()))
+			qr_res = qr_res.project('id')
+			qr_res = qr_res.sort('id')
+            auth_id = qr_res[0][0]
             if not auth_id:
-                """TO DO
-				INSERT INTO author(name, institute) VALUES (%s, %s)"""
-                conn.commit()
-                """TO DO 
-				SELECT id from author WHERE name=%s"""
-                auth_id = cur.fetchone()
+                qp.addToTable('author', ('name', name), ('institute', "NULL"))
 
-            """TO DO
-			INSERT INTO article_author(article_id, author_id) VALUES (%s, %s)"""
-            conn.commit()
+                qr_res = qp.getFromTable('author', ('name', author))
+				qr_res = qr_res.project('id')
+				qr_res = qr_res.sort('id')
+                auth_id = qr_res[0][0]
+
+            qp.addToTable('article_author', ('article_id', id), ('author_id', auth_id))
 
         for keyword in keywords:
             keyword = keyword.strip()
-            """TO DO
-			SELECT id from keyword WHERE tag=%s"""
-            keyword_id = cur.fetchone()
+            qr_res = qp.getFromTable('keyword', ('tag', keyword))
+			qr_res = qr_res.project('id')
+			qr_res = qr_res.sort('id')
+            keyword_id = qr_res[0][0]
             if not keyword_id:
-                """TO DO
-				INSERT INTO keyword(tag) VALUES (%s)"""
-                conn.commit()
-                """TO DO
-				SELECT id from keyword WHERE tag=%s"""
-                keyword_id = cur.fetchone()
+                qp.addToTable('keyword', ('tag', keyword))
 
-            """TO DO
-			INSERT INTO article_keyword(article_id, keyword_id) VALUES (%s, %s)"""
-            conn.commit()
+                qr_res = qp.getFromTable('keyword', ('tag', keyword))
+				qr_res = qr_res.project('id')
+				qr_res = qr_res.sort('id')
+                keyword_id = qr_res[0][0]
+
+            qp.addToTable('article_keyword', ('article_id', id), ('keyword_id', keyword_id))
 
         for ref_to in ref_tos:
             if ref_to:
-                """TO DO
-				INSERT INTO reference(from_id, to_id) VALUES (%s, %s)"""
-                conn.commit()
+                qp.addToTable('reference', ('from_id', id), ('to_id', int(ref_to)))
 
         for ref_from in ref_froms:
             if ref_from:
-                """TO DO
-				INSERT INTO reference(from_id, to_id) VALUES (%s, %s)"""
-                conn.commit()
-
-        cur.close()
+                qp.addToTable('reference', ('from_id', id), ('to_id', int(ref_from)))
 
         self.redirect(self.get_argument("next", u"/article/?id=" + str(id)))
 
@@ -273,23 +266,13 @@ class ArticleDeleteHandler(BaseHandler):
     def post(self):
         id = self.get_argument('id')
 
-        cur = conn.cursor()
-        """TO DO
-		DELETE FROM article_author WHERE article_id=%s"""
-        conn.commit()
+        qp.deleteFromTable('article_author', ('article_id', id))
 
-        """TO DO
-		DELETE FROM article_keyword WHERE article_id=%s"""
-        conn.commit()
+        qp.deleteFromTable('article_keyword', ('article_id', id))
 
-        """TO DO
-		DELETE FROM reference WHERE from_id=%s OR to_id=%s"""
-        conn.commit()
+        qp.deleteFromTable('reference', ('from_id', id), ('to_id', id))
 
-        """TO DO
-		DELETE FROM article WHERE id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('article', ('id', id))
 
         self.redirect(self.get_argument("next", u"/search/"))
 
@@ -297,28 +280,38 @@ class ArticleUpdateHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         id = self.get_argument('id')
-        cur = conn.cursor()
-        """TO DO
-		SELECT * FROM article WHERE id=%s;"""
-        article = cur.fetchone()
+        qr_res = qp.getFromTable('article', ('id', id))
+		qr_res = qr_res.sort('id')
+        article = qr_res
 
-        """TO DO
-		SELECT author.id,name FROM author, article_author WHERE author_id=author.id AND  article_id=%s"""
-        authors = cur.fetchall()
+        qr_article_author = qp.getFromTable('article_author', ('article_id', id))
+		qr_author = qp.getFromTable('author')
+		qr_res = qr_author.join(qr_article_author, 'id', 'author_id')
+		qr_res = qr_res.project('id', 'name')
+		qr_res = qr_res.sort('id')
+        authors = qr_res
 
-        """TO DO
-		SELECT to_id, paper_title FROM reference, article WHERE article.id=to_id AND from_id=%s"""
-        tos = cur.fetchall()
+        qr_reference = qp.getFromTable('reference', ('from_id', id))
+		qr_author = qp.getFromTable('article')
+		qr_res = qr_reference.join(qr_article, 'id', 'to_id')
+		qr_res = qr_res.project('to_id', 'paper_title')
+		qr_res = qr_res.sort('to_id')
+        tos = qr_res
 
-        """TO DO
-		SELECT from_id, paper_title FROM reference, article WHERE article.id=from_id AND to_id=%s"""
-        froms = cur.fetchall()
+        qr_reference = qp.getFromTable('reference', ('to_id', id))
+		qr_author = qp.getFromTable('article')
+		qr_res = qr_reference.join(qr_article, 'id', 'from_id')
+		qr_res = qr_res.project('to_id', 'paper_title')
+		qr_res = qr_res.sort('to_id')
+        froms = qr_res
 
-        """TO DO
-		SELECT tag FROM keyword, article_keyword WHERE article_id=%s AND keyword_id=keyword.id"""
-        keywords = cur.fetchall()
+        qr_article_keyword = qp.getFromTable('article_keyword', ('article_id', id))
+		qr_author = qp.getFromTable('article')
+		qr_res = qr_keyword.join(qr_article_keyword, 'id', 'keyword_id')
+		qr_res = qr_res.project('tag')
+		qr_res = qr_res.sort('tag')
 
-        cur.close()
+        keywords = qr_res
 
         self.render('articleupdate.html', id=article[0], title=article[1], year=article[2],
             venue=article[3], authors=authors, tos=tos, froms=froms, keywords=keywords)
@@ -331,11 +324,8 @@ class ArticleUpdateSaveHandler(BaseHandler):
         year = self.get_argument('year')
         venue = self.get_argument('venue')
 
-        cur = conn.cursor()
-        """TO DO
-		UPDATE article SET id=%s, paper_title=%s, year=%s, venue=%s WHERE id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('article', ('id', id))
+		qp.addToTable('author', ('id', id), ('paper_title', paper_title), ('year', year), ('venue', venue))
 
         self.redirect(self.get_argument("next", u"/article/?id=" + id))
 
@@ -345,25 +335,24 @@ class ArticleUpdateAddAuthorHandler(BaseHandler):
         id = self.get_argument('id')
         name = self.get_argument('name')
 
-        cur = conn.cursor()
-        """TO DO
-		SELECT id FROM author WHERE name=%s"""
-        author_id = cur.fetchone()
+        qr_author = qp.getFromTable('author', ('name', name))
+		qr_res = qr_res.project('id')
+		qr_res = qr_res.sort('id')
+        author_id = qr_res[0][0]
+
         if not author_id:
-            """TO DO
-			INSERT INTO author(name, institute) VALUES (%s, %s)"""
-            conn.commit()
-			"""TO DO
-			SELECT author_id  author WHERE author.name=%s"""
-            author_id = cur.fetchone()
+            qp.addToTable('author', ('name', name), ('institute', "NULL"))
+
+            qr_author = qp.getFromTable('author', ('name', name))
+    		qr_res = qr_res.project('author_id')
+    		qr_res = qr_res.sort('author_id')
+
+            author_id = qr_res[0][0]
 
         try:
-            """TO DO
-			INSERT INTO article_author (author_id, article_id) VALUES (%s, %s)"""
-            conn.commit()
+            qp.addToTable('article_author', ('author_id', author_id[0]), ('article_id', id))
         except:
-            conn.rollback()
-        cur.close()
+            pass
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -373,11 +362,7 @@ class ArticleUpdateDeleteAuthorHandler(BaseHandler):
         id = self.get_argument('id')
         author_id = self.get_argument('author_id')
 
-        cur = conn.cursor()
-        """TO DO
-		DELETE FROM article_author WHERE author_id=%s AND article_id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('article_author', ('author_id', author_id), ('id', id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -388,24 +373,22 @@ class ArticleUpdateAddKeywordHandler(BaseHandler):
         tag = self.get_argument('tag')
         if tag:
             cur = conn.cursor()
-            """TO DO
-			SELECT id FROM keyword WHERE tag=%s"""
-            tag_id = cur.fetchone()
+            qr_keyword = qp.getFromTable('keyword', ('tag', tag))
+        	qr_res = qr_res.project('id')
+        	qr_res = qr_res.sort('id')
+            tag_id = qr_res[0]
             if not tag_id:
-                """TO DO
-				INSERT INTO keyword(tag) VALUES (%s)"""
-                conn.commit()
-                """TO DO 
-				SELECT id FROM keyword WHERE tag=%s"""
-                tag_id = cur.fetchone()
+                qp.addToTable('keyword', ('tag', tag))
+
+                qr_keyword = qp.getFromTable('keyword', ('tag', tag))
+            	qr_res = qr_res.project('id')
+            	qr_res = qr_res.sort('id')
+                tag_id = qr_res[0]
 
             try:
-                """TO DO
-				INSERT INTO article_keyword (article_id, keyword_id) VALUES (%s, %s)"""
-                conn.commit()
+                qp.addToTable('article_keyword', ('article_id', id), ('keyword_id', keyword_id))
             except:
-                conn.rollback()
-            cur.close()
+                pass
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -415,14 +398,7 @@ class ArticleUpdateDeleteKeywordHandler(BaseHandler):
         id = self.get_argument('id')
         tag = self.get_argument('tag')
 
-        cur = conn.cursor()
-        """TO DO
-		SELECT id FROM keywords WHERE tag=%s"""
-        keyword_id = cur.fetchone()[0]
-        """TO DO
-		DELETE FROM article_keyword WHERE keyword_id=%s AND article_id=%s"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('article_keyword', ('keyword_id', keyword_id), ('article_id', id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -432,11 +408,7 @@ class ArticleUpdateAddReftoHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('ref_to')
 
-        cur = conn.cursor()
-        """TO DO
-		INSERT entry INTO reference that is referencing from"""
-        conn.commit()
-        cur.close()
+        qp.addToTable('reference', ('from_id', id), ('to_id', article_id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -446,11 +418,7 @@ class ArticleUpdateDeleteReftoHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('ref_to')
 
-        cur = conn.cursor()
-        """TO DO
-		DELETE entry FROM reference that is referencing from"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('reference', ('from_id', id), ('to_id', article_id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -460,11 +428,7 @@ class ArticleUpdateAddReffromHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('ref_from')
 
-        cur = conn.cursor()
-        """TO DO
-		INSERT entry INTO reference that is referenced from"""
-        conn.commit()
-        cur.close()
+        qp.addToTable('reference', ('from_id', article_id), ('to_id', id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -474,11 +438,7 @@ class ArticleUpdateDeleteReffromHandler(BaseHandler):
         id = self.get_argument('id')
         article_id = self.get_argument('ref_from')
 
-        cur = conn.cursor()
-        """TO DO
-		DELETE entry from reference that is referenced from"""
-        conn.commit()
-        cur.close()
+        qp.deleteFromTable('reference', ('from_id', id), ('to_id', article_id))
 
         self.redirect(self.get_argument("next", u"/article/update/?id=" + id))
 
@@ -518,7 +478,7 @@ class AuthLoginHandler(BaseHandler):
         #get hash of name
         dk = hashlib.pbkdf2_hmac('sha256', bytearray(username, 'utf8'), b'salt', 100000)
         username_hashed = binascii.hexlify(dk).decode("ascii")
-		
+
         #get hash password from database
         return login.get_hash_login(username_hashed, password)
 

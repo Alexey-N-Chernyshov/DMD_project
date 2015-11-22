@@ -6,7 +6,7 @@ class DBBuilder:
             ('id', DataType.INTEGER, True),
             ('paper_title', DataType.STRING, True),
             ('year', DataType.INTEGER, True),
-            ('venue', DataType.STRING, False))
+            ('venue', DataType.STRING, True))
 
         qp.createTable('article_author',
             ('article_id', DataType.INTEGER, True),
