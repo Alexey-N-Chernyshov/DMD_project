@@ -49,12 +49,56 @@ class SearchResultHandler(BaseHandler):
         order = self.get_argument('order', "by id def")
         print(order)
 
-        """TO DO
-		SELECT + JOINS here."""
+        qr_article_author = qp.getFromTable('article_author', )
+		# JOIN article_author, article ON article_id == article.id
+		query = []
+		if id:
+			query.apend(('id', id))
+		if title:
+			query.apend(('paper_title', title))
+		if year:
+			query.apend(('year', year))
+
+		qr_article = qp.getFromTable('article', *query)
+		qr_res = qr_article_author.join(qr_article, 'article_id', 'id')
+		# res (article_id, author_id, paper_title, year, venue)
+
+		# JOIN res, article_keyword ON article_id == article.id
+		qr_article_keyword = qp.getFromTable('article_keyword', )
+		qr_res = qr_res.join(qr_article_keyword, 'article_id', 'article_id')
+		# res (article_id, keyword_id, author_id, paper_title, year, venue)
+
+		# JOIN res, author ON author_id == author.id
+		query = []
+		if author:
+			query.apend(('name', author))
+		if venue:
+			query.apend(('venue', venue))
+		qr_author = qp.getFromTable('author', *query)
+		qr_res = qr_res.join(qr_author, 'article_id', 'id')
+		# res (article_id, keyword_id, author_id, name, institute, paper_title, year, venue)
+
+		# JOIN res, keyword ON keyword_id == keyword.id
+		query = []
+		if keyword:
+			query.apend(('tag', keyword))
+		qr_author = qp.getFromTable('keyword', *query)
+		qr_res = qr_res.join(qr_author, 'keyword_id', 'id')
+		# res (article_id, keyword_id, tag, author_id, name, institute, paper_title, year, venue)
+
+		qr_res = qr_res.project('article_id', 'paper_title', 'venue', 'year')
+		if order == 'id':
+			qr_res.sort('article_id')
+		elif order == 'title':
+			qr_res.sort('paper_title')
+        elif order == 'year':
+            qr_res.sort('year')
+
+        qr_res.limit(offset, offset + 20)
 
         cur = conn.cursor()
         cur.execute(query)
-        articles = cur.fetchall()
+        articles = qr_res
         cur.close()
 
         self.render('searchresult.html', articles=articles, id=id, title=title,
@@ -66,15 +110,18 @@ class AuthorHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        """TO DO
-		SELECT id, name, institute FROM author WHERE id=%s;"""
-        author = cur.fetchone()
+        qr_author = qp.getFromTable('author', )
+        qr_res = qp.getFromTable('author', ('id', id))
+        qr_res = qr_res.project('id', 'name', 'institute')
+        qr_res = qr_res.sort('id')
+        author = qr_res[0]
 
-        """TO DO
-		SELECT article_id, article.paper_title
-		FROM article_author JOIN article ON article_id=article.id
-		WHERE author_id=%s"""
-        articles = cur.fetchall()
+        qr_article_author = qp.getFromTable('article_author', ('author_id', author_id))
+        qr_article = qp.getFromTable('article')
+        qr_res = qr_article_author.join(qr_article, 'article_id', 'id')
+        qr_res = qr_res.project('article_id', 'paper_title')
+        qr_res = qr_res.sort('article_id')
+        articles = qr_res
         cur.close()
 
         self.render('author.html', id=author[0], name=author[1], institute=author[2], articles=articles)
@@ -85,12 +132,10 @@ class AuthorDeleteHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        """TO DO
-		DELETE FROM article_author WHERE author_id=%s"""
+        qp.deleteFromTable('article_author', ('author_id', author_id))
         conn.commit()
 
-        """TO DO
-		DELETE FROM author WHERE id=%s"""
+        qp.deleteFromTable('author', ('id', id))
         conn.commit()
         cur.close()
 
@@ -102,15 +147,17 @@ class AuthorUpdateHandler(BaseHandler):
         id = self.get_argument('id')
 
         cur = conn.cursor()
-        """TO DO
-		SELECT id, name, institute FROM author WHERE id=%s;"""
-        author = cur.fetchone()
+        qr_res = qp.getFromTable('author', ('id', id))
+        qr_res = qr_res.project('id', 'name', 'institute')
+        qr_res = qr_res.sort('id')
+        author = qr_res[0]
 
-        """TO DO
-		SELECT article_id, article.paper_title
-		FROM article_author JOIN article ON article_id=article.id
-		WHERE author_id=%s"""
-        articles = cur.fetchall()
+        qr_article_author = qp.getFromTable('article_author', ('author_id', author_id))
+        qr_article = qp.getFromTable('article')
+        qr_res = qr_article_author.join(qr_article, 'article_id', 'id')
+        qr_res = qr_res.project('article_id', 'paper_title')
+        qr_res = qr_res.sort('article_id')
+        articles = qr_res
         cur.close()
 
         self.render('authorupdate.html', id=author[0], name=author[1], institute=author[2], articles=articles)

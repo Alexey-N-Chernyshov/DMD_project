@@ -67,13 +67,13 @@ class SearchResultHandler(BaseHandler):
 
 			qr_res = qr_res.project('article_id', 'paper_title', 'venue', 'year')
 			if order == 'id':
-				query.sort('article_id')
+				qr_res.sort('article_id')
 			elif order == 'title':
-				query.sort('paper_title')
+				qr_res.sort('paper_title')
 			elif order == 'year':
-				query.sort('year')
+				qr_res.sort('year')
 
-			query.limit(offset, offset + 20)
+			qr_res.limit(offset, offset + 20)
 
 """============================================================
 ==============================================================="""
