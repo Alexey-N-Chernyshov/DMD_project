@@ -25,7 +25,6 @@
 
 \documentclass{article}
 
-\usepackage{minted}
 \usepackage{fancyhdr} % Required for custom headers
 \usepackage{lastpage} % Required to determine the last page for the footer
 \usepackage{extramarks} % Required for headers and footers
@@ -35,6 +34,7 @@
 \usepackage{courier} % Required for the courier font
 \usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
 \usepackage{hyperref}
+\usepackage{minted}
 
 % Margins
 \topmargin=-0.45in
@@ -63,8 +63,7 @@
 %	NAME AND CLASS SECTION
 %----------------------------------------------------------------------------------------
 
-\newcommand{\hmwkTitle}{Project\ Phase\ 3} % Assignment title
-\newcommand{\hmwkDueDate}{Sunday,\ November\ 22,\ 2015} % Due date
+\newcommand{\hmwkTitle}{DBMS Project} % Assignment title
 \newcommand{\hmwkClass}{Data Modeling and Databases} % Course/class
 %\newcommand{\hmwkClassTime}{10:30am} % Class/lecture time
 \newcommand{\hmwkClassInstructor}{Qiang Qu} % Teacher/lecturer
@@ -77,7 +76,6 @@
 \title{
 \vspace{2in}
 \textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
-\normalsize\vspace{0.1in}\small{Due\ on\ \hmwkDueDate}\\
 \vspace{0.1in}\large{\textit{\hmwkClassInstructor\ }}
 \vspace{3in}
 }
@@ -102,6 +100,137 @@
 \newpage
 
 %----------------------------------------------------------------------------------------
+\section{Phase 1. Design and Implement Relational Model.}
+
+\subsection{Introducing}
+There are many repositories containing research article information, but not all of them provide interfaces to access this information. Thus we decided to use DBLP. One of its interfaces is (https://aminer.org/billboard/citation), which provides such additional information as cites and abstracts for articles. This information further will be used in ranking methods. 
+
+\subsection{ER-Model}
+After studying the documentation we agreed on next entities for our ER-model: 
+\begin{itemize} 
+	\item Article
+	\item Author
+	\item Keyword
+\end{itemize} 
+We will extract Keywords from the abstracts in order to search for related articles.
+We designed this ER-Model:
+\newline
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=1\textwidth]{ER.png}
+  \caption{ER-Model diagram.}
+\end{figure}
+
+\newpage
+Our ER-Model was transformed into Relations:
+\begin{itemize} 
+	\item article: \{[\underline{id: INTEGER}, paper\_title: STRING, venue: STRING, year: INTEGER]\}
+	\item author: \{[\underline{id: INTEGER}, name: STRING, institute: STRING]\}
+	\item keyword: \{[\underline{id: INTEGER}, tag: STRING]\}
+	\item article\_author: \{[\underline{id\_article: INTEGER}, \underline{id\_author: INTEGER}]\}
+	\item article\_keword: \{[\underline{id\_article: INTEGER}, \underline{id\_keyword: INTEGER}]\}
+	\item reference: \{[\underline{from\_id: INTEGER}, \underline{to\_id: INTEGER}]\}
+\end{itemize} 
+
+\subsection{Functionality}
+We designed the relations in an existing database management system (DBMS) by creating physical tables and their relationships. For our DBMS we have chosen the PostgreSQL. We imported 1.632.442 publications that we parsed using a Python script from an existing publication repository (DBLP).
+In addition, we created the SQL-query files that perform such operations:
+\begin{itemize} 
+	\item Select
+	\item Update
+	\item Delete
+	\item Insert
+\end{itemize}
+You can search the publication based on author name, publication year, venue(conference/journal name), title, keyword, institution. 
+
+To search for the related articles you can use Keywords and References (to\\from).
+
+You can sort the publications based on such ranking methods:
+\begin{itemize} 
+	\item based on the number of times the Authors were cited. (In case of a new publication with no references to, but with popular authors)
+	\item based on the number of times the Article was cited. (Popular publications)
+\end{itemize}
+SQL-query files can be found in attachment.
+\\
+
+
+\newpage
+\section{Phase 2. Web-based User Interface.}
+
+\subsection{Introducing}
+According to Project Phase2 requirements we had to develop a web-based graphical user interface on top of physical database that we had created at Phase 1. \\
+After considering different high-level programming languages we decided to use Python because of its clean, straightforward syntax and great support for building web apps. And as it was suggested by instructors on piazza.com we used PostgreSQL for the database management system and Tornado web framework for the web-based GUI.
+
+\subsection{Setup Instructions}
+
+1. Install Python: https://www.python.org/download/releases/3.4.0/ \\
+2. Install PostgreSQL: http://www.postgresql.org/download/ \\
+3. Import dump: execute in cmd in folder: 
+\begin{verbatim}
+".../PostgreSQL/9.4/bin/ psql -U 'input your database username here' -f \end{verbatim}
+\begin{verbatim}
+'path to dump file' 'name of your database' 
+\end{verbatim} 
+4. Execute query to add auth table:
+\begin{verbatim}
+...\src\sql\auth\create_auth.sql
+\end{verbatim} 
+5. Configure Settings.py - set your username and password \\
+6. Install Tornado: execute in cmd in folder
+\begin{verbatim}
+C:\Python34\Lib\site-packages\easy_install.py tornado 
+\end{verbatim}
+7. Run in cmd webserver.py 
+8. Go to http://localhost:8000 \\
+
+\subsection{Functionality}
+According to the Phase 2 requirements only authorized/registered users are allowed to use the interface that we have created. The table with usernames and passwords can be stored in another database but in our case we decided to store it at the main database, even it is not logically connected with it.
+Authorized/registered users can carry out all the specified functionality, including search, insert (add), update () and delete.
+All the search results can be ranged in ascending or descending order.
+
+\newpage
+\subsection{Site map}
+~
+\newline
+\begin{figure}[h!]
+  \centering
+      \includegraphics[height=11cm]{sitemap.png}
+  \caption{Site Map}
+\end{figure}
+
+\newpage
+\subsection{Snapshots of the Interface}
+~
+~
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=16cm]{1.jpg}
+  \caption{Log in or Sign in}
+\end{figure}
+~
+~
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=16cm]{2.jpg}
+  \caption{Search}
+\end{figure}
+~
+~
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=16cm]{3.jpg}
+  \caption{Search result}
+\end{figure}
+~
+~
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=16cm]{4.jpg}
+  \caption{Article}
+\end{figure}
+
+~
+
 \section{Phase 3. DBMS}
 
 \subsection{Introducing}
@@ -235,8 +364,40 @@ Buffer manager is the top level of file I/O that optimises the Query processor a
 
 During the fulfilling of this Project we have implemented the knowledge acquired during the Data Modeling and Databases Course. We have touched the web development (Tornado framework), Python programming language. We organized our cooperation using the Git Hub source code management system. And we all gained some great team work experience.
 
+
+
 \newpage
 \begin{thebibliography}{1}
+
+\bibitem{def_dblp} 
+\url{http://dblp.uni-trier.de/} DBLP
+
+\bibitem{def_aminer} 
+\url{https://aminer.org/billboard/citation} aminer.org
+
+\bibitem{def_aminer} 
+\url{http://dblp.uni-trier.de/faq/dblpxml[1].pdf} DBLP — Some Lessons Learned by Michael Ley
+
+\bibitem{def_aminer} 
+\url{http://dblp.uni-trier.de/xml/docu/dblpxmlreq.pdf} DBLP XML Requests
+
+
+\bibitem{def_dblp} 
+\url{https://www.python.org/} Python v.3.4
+
+\bibitem{def_tornado} 
+\url{http://www.tornadoweb.org} Tornado v.4.2.1
+
+\bibitem{def_tornadobook} 
+\ Introduction to Tornado. O’Reilly Media, Inc., 2012. \ ISBN: 978-1-449-30907-7
+
+\bibitem{def_postgresql}
+\url{http://www.postgresql.org/} Postgresql v.9.4.5
+
+\bibitem{def_psycopg} 
+\url{https://pypi.python.org/pypi/psycopg2} Psycopg2 v.2.6.1
+
+
 
 \bibitem{def_tornadobook} 
 \ Concepts of Database Management. Philip J. Pratt, Joseph J. Adamski. Cengage Learning, 2008. \\ ISBN: 1-4239-0147-9
@@ -246,6 +407,10 @@ During the fulfilling of this Project we have implemented the knowledge acquired
 
 \bibitem{def_tornadobook} 
 \ A First Course in Database Systems. Jeffrey D. Ullman, Jennifer Widom. Pearson Education., 2008. \\ ISBN: 978-0-13-502176-7
+
+
+
+
 
 
 \end{thebibliography}
