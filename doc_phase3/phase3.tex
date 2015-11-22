@@ -1,0 +1,237 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Programming/Coding Assignment
+% LaTeX Template
+%
+% This template has been downloaded from:
+% http://www.latextemplates.com
+%
+% Original author:
+% Ted Pavlic (http://www.tedpavlic.com)
+%
+% Note:
+% The \lipsum[#] commands throughout this template generate dummy text
+% to fill the template out. These commands should all be removed when 
+% writing assignment content.
+%
+% This template uses a Perl script as an example snippet of code, most other
+% languages are also usable. Configure them in the "CODE INCLUSION 
+% CONFIGURATION" section.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+
+\usepackage{minted}
+\usepackage{fancyhdr} % Required for custom headers
+\usepackage{lastpage} % Required to determine the last page for the footer
+\usepackage{extramarks} % Required for headers and footers
+\usepackage[usenames,dvipsnames]{color} % Required for custom colors
+\usepackage{graphicx} % Required to insert images
+\usepackage{listings} % Required for insertion of code
+\usepackage{courier} % Required for the courier font
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+\usepackage{hyperref}
+
+% Margins
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\linespread{1.1} % Line spacing
+
+% Set up the header and footer
+\pagestyle{fancy}
+\lhead{} % Top left header
+\chead{\hmwkClass: \hmwkTitle} % Top center head
+\rhead{\firstxmark} % Top right header
+\lfoot{\lastxmark} % Bottom left footer
+\cfoot{} % Bottom center footer
+\rfoot{Page\ \thepage\ of\ \protect\pageref{LastPage}} % Bottom right footer
+\renewcommand\headrulewidth{0.4pt} % Size of the header rule
+\renewcommand\footrulewidth{0.4pt} % Size of the footer rule
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+%----------------------------------------------------------------------------------------
+%	NAME AND CLASS SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\hmwkTitle}{Project\ Phase\ 3} % Assignment title
+\newcommand{\hmwkDueDate}{Sunday,\ November\ 22,\ 2015} % Due date
+\newcommand{\hmwkClass}{Data Modeling and Databases} % Course/class
+%\newcommand{\hmwkClassTime}{10:30am} % Class/lecture time
+\newcommand{\hmwkClassInstructor}{Qiang Qu} % Teacher/lecturer
+\newcommand{\hmwkAuthorName}{Alexey Chernyshov, Vladislav Kravchenko, Murad Magomedov} % Your names
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{
+\vspace{2in}
+\textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+\normalsize\vspace{0.1in}\small{Due\ on\ \hmwkDueDate}\\
+\vspace{0.1in}\large{\textit{\hmwkClassInstructor\ }}
+\vspace{3in}
+}
+
+\author{\textbf{\hmwkAuthorName}}
+\date{} % Insert date here if you want it to appear below your name
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+
+%\setcounter{tocdepth}{1} % Uncomment this line if you don't want subsections listed in the ToC
+
+\newpage
+\tableofcontents
+\newpage
+
+%----------------------------------------------------------------------------------------
+\section{Phase 3. DBMS}
+
+\subsection{Introducing}
+According to Project Phase 3 requirements we had to replace the relational database with our own implementation of a database. So we have done it, including implementation of query operators using python programming language.
+
+\subsection{Functionality}
+At phase 3 all SQL code was replaced with calls to the query operators. So now our database provides methods to query data, to insert new records and to update existing records. \\
+
+\textbf{For example, SQL code of Select:}
+
+\begin{minted}{sql}
+cur.execute("""SELECT id, name, institute FROM author WHERE id=%s;""", (id, ))
+\end{minted}
+
+\textbf{Replaced with:}
+
+\begin{minted}{python}
+qr_author = qp.getFromTable('author', )
+qr_res = qp.getFromTable('author', ('id', id))
+qr_res = qr_res.project('id', 'name', 'institute')
+qr_res = qr_res.sort('id')
+\end{minted}
+~
+\\
+\textbf{Delete:}
+
+\begin{minted}{sql}
+cur.execute("""DELETE FROM article_author WHERE author_id=%s""", (id, ))
+\end{minted}
+
+\textbf{Replaced with:}
+
+\begin{minted}{python}
+qp.deleteFromTable('article_author', ('author_id', author_id))
+\end{minted}
+~
+\\
+\textbf{Update:}
+
+\begin{minted}{sql}
+cur.execute("""UPDATE author SET id=%s, name=%s, institute=%s
+            WHERE id=%s""", (id, name, institute, id))
+\end{minted}
+
+\textbf{Replaced with:}
+
+\begin{minted}{python}
+qp.deleteFromTable('author', ('id', id))
+qp.addToTable('author', ('id', id), ('name', name), ('institute', institute))
+\end{minted}
+~
+\\
+\textbf{Insert:}
+\begin{minted}{sql}
+cur.execute("""INSERT INTO reference (from_id, to_id)
+            VALUES (%s, %s)""", (id, article_id))
+\end{minted}
+
+\textbf{Replaced with:}
+
+\begin{minted}{python}
+qp.addToTable('reference', ('from_id', id), ('to_id', article_id))
+\end{minted}
+~
+\\
+\\
+\textbf{Group by:}
+
+\begin{minted}{python}
+qres.groupBy('id', 'name')
+\end{minted}
+
+\begin{verbatim}
+Our database also answers queries that join two tables, for example join of tables 
+article_author and article:
+\end{verbatim}
+
+\textbf{Join:}
+
+\begin{minted}{python}
+qr_article_author = qp.getFromTable('article_author', ('author_id', author_id))
+qr_article = qp.getFromTable('article')
+qr_res = qr_article_author.join(qr_article, 'article_id', 'id')
+qr_res = qr_res.project('article_id', 'paper_title')
+qr_res = qr_res.sort('article_id')
+\end{minted}
+
+One of the requirements of Phase 3 was to use the iterator model to implement query operators, so that operators should pull tuples from underlying operators using next() calls. \\
+So, in our case, class qres (query result) is iterable. It is possible to use qres.next or next(qres) to iterate through results.
+In our DBMS it is possible to index on Primary keys with the ability to add index on other attributes. \\
+And according to Project limitations we are using a single file for entire DBMS. The Database file is created using psqlloader.py that imports data from Postgres.
+
+\newpage
+\subsection{Disk Page Organisation}
+~
+\newline
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=17cm]{dpo.png}
+  \caption{Disk Page Organisation}
+\end{figure}
+
+\newpage
+\subsection{Class diagram}
+~
+~
+\begin{figure}[h!]
+  \centering
+      \includegraphics[width=17cm]{cd.png}
+  \caption{Class Diagram}
+\end{figure}
+~
+~
+
+~
+\\
+
+\newpage
+\begin{thebibliography}{1}
+
+\bibitem{def_tornadobook} 
+\ Concepts of Database Management. Philip J. Pratt, Joseph J. Adamski. Cengage Learning, 2008. \\ ISBN: 1-4239-0147-9
+
+\bibitem{def_tornadobook} 
+\ Database management systems. Raghu Ramakrishnan, Johannes Gehrke. McGraw-Hill., 2003. \\ ISBN: 0-07-246563-8-ISBN 0-07-115110-9 (ISE)
+
+\bibitem{def_tornadobook} 
+\ A First Course in Database Systems. Jeffrey D. Ullman, Jennifer Widom. Pearson Education., 2008. \\ ISBN: 978-0-13-502176-7
+
+
+\end{thebibliography}
+
+\end{document}
